@@ -51,7 +51,7 @@ Result:
 * Data-driven governance decisions
 
 # Project Structure
-
+```
 pm_governance_platform/
 │
 ├── app.py                  # CLI version (path-based input)
