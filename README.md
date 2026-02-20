@@ -307,4 +307,148 @@ This platform demonstrates:
 * Technical leadership
 * Enterprise deployment readiness
 
+
+
+Sample Input File Structure
+sample_status.xlsx
+Sheet Name
+Sheet1
+
+Required Columns (Exact Header Names)
+Column Name
+Data Type
+Example
+Mandatory
+Task
+Text
+API Development
+Yes
+Planned Hours
+Number
+40
+Yes
+Actual Hours
+Number
+45
+Yes
+Planned %
+Number (0–100)
+75
+Yes
+Actual %
+Number (0–100)
+70
+Yes
+Planned Budget
+Number
+10000
+Yes (for SPI/CPI)
+Actual Cost
+Number
+11000
+Yes (for CPI)
+
+
+Example Data
+Task
+Planned Hours
+Actual Hours
+Planned %
+Actual %
+Planned Budget
+Actual Cost
+Design
+40
+38
+100
+100
+5000
+4800
+Dev
+100
+120
+80
+70
+20000
+23000
+Testing
+60
+50
+50
+40
+10000
+9000
+
+
+sample_raid.xlsx
+Sheet Name
+Sheet1
+
+Required Columns
+Column Name
+Data Type
+Example
+Mandatory
+ID
+Text/Number
+R-01
+Optional
+Type
+Text
+Risk
+Yes
+Severity
+Text
+High / Medium / Low
+Yes
+Status
+Text
+Open / Closed
+Yes
+
+
+Example Data
+ID
+Type
+Severity
+Status
+R-01
+Risk
+High
+Open
+R-02
+Risk
+Medium
+Closed
+I-01
+Issue
+High
+Open
+A-01
+Assumption
+Low
+Open
+
+weekly_history.csv
+This is for Trend Chart (Last 4 Weeks)
+Required Headers
+Column Name
+Data Type
+Example
+Week
+Text
+Week 1
+Completion
+Number (0–100)
+65
+
+
+Example Data
+Week,Completion
+Week 1,60
+Week 2,68
+Week 3,75
+Week 4,82
+
+
 Tell me where you want to position this 🚀
