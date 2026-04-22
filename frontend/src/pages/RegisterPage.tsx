@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { postLoginPath } from "../auth/roleUtils";
 import { validateRegisterForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
@@ -25,7 +26,7 @@ export default function RegisterPage() {
     );
   }
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={postLoginPath(user.role, "/dashboard")} replace />;
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -36,8 +37,8 @@ export default function RegisterPage() {
     if (Object.keys(v).length > 0) return;
     setBusy(true);
     try {
-      await register(email, password, fullName);
-      navigate("/dashboard", { replace: true });
+      const me = await register(email, password, fullName);
+      navigate(postLoginPath(me.role, "/dashboard"), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

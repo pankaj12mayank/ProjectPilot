@@ -130,6 +130,9 @@ export default function ProjectDetailPage() {
           <Link to={`/dashboard/projects/${project.id}/reports`} className="pp-btn pp-btn--secondary">
             Reports
           </Link>
+          <Link to={`/dashboard/projects/${project.id}/history`} className="pp-btn pp-btn--secondary">
+            Project history
+          </Link>
           <Link to={`/dashboard/projects/${project.id}/reports/history`} className="pp-btn pp-btn--secondary">
             Report history
           </Link>

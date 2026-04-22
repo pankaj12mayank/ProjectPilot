@@ -133,3 +133,11 @@ export function uploadProjectAnalyze(
     run(false);
   });
 }
+
+export async function recordProjectMetricsSnapshot(
+  projectId: string,
+): Promise<{ snapshot_id: string; created_at: string }> {
+  const res = await apiFetch(`/projects/${projectId}/metrics/snapshot`, { method: "POST" });
+  if (!res.ok) throw new Error(await res.text());
+  return parseJson<{ snapshot_id: string; created_at: string }>(res);
+}

@@ -4,7 +4,7 @@ import logging
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -20,8 +20,11 @@ from app.schemas.project import (
     ProjectOut,
     ProjectUpdate,
 )
+from app.schemas.portfolio import MetricsSnapshotOut, ProjectHistoryOut
 from app.schemas.reports import ProjectIntelligenceOut, ProjectReportPackageOut, ReportRunSummaryOut
-from app.services import project_service
+from app.services import event_log_service, project_service
+from app.services.portfolio_service import record_manual_snapshot
+from app.services.project_history_service import build_project_history
 from app.services.analytics.project_health import build_project_health_payload
 from app.services.intelligence.package import build_intelligence_core
 from app.services.report_artifacts import resolve_report_artifact_path
@@ -46,6 +49,22 @@ def create_project(
     user: User = Depends(get_current_user),
 ) -> ProjectOut:
     p = project_service.create_project(db, user, body)
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=p.id,
+        kind="project.create",
+        summary=f"Created project {p.name}",
+        detail={"project_id": p.id},
+    )
+    event_log_service.write_audit(
+        db,
+        actor_user_id=user.id,
+        action="project.create",
+        entity_type="project",
+        entity_id=p.id,
+        detail={"name": p.name},
+    )
     return project_service.project_to_out(p)
 
 
@@ -70,8 +89,25 @@ def patch_project(
     body: ProjectUpdate,
     project: Project = Depends(get_owned_project),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> ProjectOut:
     p = project_service.update_project(db, project, body)
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=p.id,
+        kind="project.update",
+        summary=f"Updated project {p.name}",
+        detail={"project_id": p.id},
+    )
+    event_log_service.write_audit(
+        db,
+        actor_user_id=user.id,
+        action="project.update",
+        entity_type="project",
+        entity_id=p.id,
+        detail={},
+    )
     return project_service.project_to_out(p)
 
 
@@ -79,6 +115,7 @@ def patch_project(
 def generate_project_reports(
     project: Project = Depends(get_owned_project),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> ProjectReportPackageOut:
     """Forecast, root causes, recommendations, and multi-format exports under outputs/reports/{job_id}/."""
     try:
@@ -87,6 +124,7 @@ def generate_project_reports(
             project.id,
             project.name,
             get_settings(),
+            actor_user_id=user.id,
         )
         return ProjectReportPackageOut.model_validate(payload)
     except Exception as exc:
@@ -167,6 +205,37 @@ def get_project_intelligence(
         raise HTTPException(status_code=500, detail="Intelligence computation failed") from exc
 
 
+@router.get("/{project_id}/history", response_model=ProjectHistoryOut)
+def get_project_history(
+    project: Project = Depends(get_owned_project),
+    db: Session = Depends(get_db),
+    limit: int = Query(120, ge=1, le=300),
+) -> ProjectHistoryOut:
+    """Report runs, metric snapshots, and stored generated files — all linked to this project_id."""
+    data = build_project_history(db, project, limit=limit)
+    return ProjectHistoryOut.model_validate(data)
+
+
+@router.post("/{project_id}/metrics/snapshot", response_model=MetricsSnapshotOut)
+def record_metrics_snapshot(
+    project: Project = Depends(get_owned_project),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> MetricsSnapshotOut:
+    """Persist a trend point from current ingested data (no full report generation)."""
+    health = build_project_health_payload(db, project.id, get_settings())
+    out = record_manual_snapshot(db, project.id, health)
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=project.id,
+        kind="metrics.snapshot",
+        summary=f"Recorded metrics snapshot for {project.name}",
+        detail={"snapshot_id": out["snapshot_id"]},
+    )
+    return MetricsSnapshotOut.model_validate(out)
+
+
 @router.get("/{project_id}/analytics/health")
 def get_project_health_analytics(
     project: Project = Depends(get_owned_project),
@@ -193,6 +262,7 @@ def list_project_files(
 async def analyze_uploads(
     project: Project = Depends(get_owned_project),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
     status_tracker: UploadFile | None = File(None),
     raid_log: UploadFile | None = File(None),
     weekly_history: UploadFile | None = File(None),
@@ -216,4 +286,13 @@ async def analyze_uploads(
     if not files_by_role:
         raise HTTPException(status_code=400, detail="Attach at least one file (status_tracker, raid_log, or weekly_history).")
 
-    return project_service.analyze_uploads(db, project, files_by_role)
+    resp = project_service.analyze_uploads(db, project, files_by_role)
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=project.id,
+        kind="upload.analyze",
+        summary=f"Analyzed uploads for {project.name}",
+        detail={"roles": list(files_by_role.keys())},
+    )
+    return resp

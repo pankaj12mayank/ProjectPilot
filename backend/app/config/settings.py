@@ -69,6 +69,10 @@ class Settings(BaseSettings):
     bootstrap_admin_name: str = Field(default="Administrator", validation_alias="BOOTSTRAP_ADMIN_NAME")
     dev_return_reset_token: bool = Field(default=False, validation_alias="DEV_RETURN_RESET_TOKEN")
 
+    public_api_url: str | None = Field(default=None, validation_alias="PUBLIC_API_URL")
+    public_app_url: str | None = Field(default=None, validation_alias="PUBLIC_APP_URL")
+    branding_max_upload_mb: int = Field(default=5, ge=1, le=100, validation_alias="BRANDING_MAX_UPLOAD_MB")
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def repo_root(self) -> Path:
@@ -100,6 +104,22 @@ class Settings(BaseSettings):
         p = self.repo_root / "uploads"
         p.mkdir(parents=True, exist_ok=True)
         return p
+
+    @property
+    def branding_upload_dir(self) -> Path:
+        p = self.uploads_dir / "branding"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def branding_defaults_dir(self) -> Path:
+        p = self.repo_root / "branding_defaults"
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    @property
+    def branding_max_upload_bytes(self) -> int:
+        return int(self.branding_max_upload_mb) * 1024 * 1024
 
     def rag_thresholds(self) -> dict[str, float | int]:
         return {

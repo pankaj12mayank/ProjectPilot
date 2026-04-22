@@ -20,17 +20,36 @@ def _rag_rgb(rag: str) -> tuple[int, int, int]:
 
 
 def write_executive_pdf(path: Path, title: str, markdown_body: str) -> Path:
+    """PDF uses Helvetica (built-in PDF fonts) for reliable embedding and a clean enterprise look."""
+    from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
     path.parent.mkdir(parents=True, exist_ok=True)
     styles = getSampleStyleSheet()
-    story: list[Any] = [Paragraph(escape(title), styles["Title"]), Spacer(1, 12)]
+    title_style = ParagraphStyle(
+        "PP_Title",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=22,
+        leading=26,
+        spaceAfter=10,
+        textColor=colors.HexColor("#111827"),
+    )
+    body_style = ParagraphStyle(
+        "PP_Body",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=11,
+        leading=16,
+        textColor=colors.HexColor("#1f2937"),
+    )
+    story: list[Any] = [Paragraph(escape(title), title_style), Spacer(1, 12)]
     for para in markdown_body.split("\n\n"):
         for line in para.split("\n"):
             t = line.strip() or " "
-            story.append(Paragraph(escape(t)[:3500], styles["BodyText"]))
+            story.append(Paragraph(escape(t)[:3500], body_style))
             story.append(Spacer(1, 4))
     doc = SimpleDocTemplate(str(path), pagesize=letter)
     doc.build(story)
@@ -38,16 +57,28 @@ def write_executive_pdf(path: Path, title: str, markdown_body: str) -> Path:
 
 
 def write_client_docx(path: Path, title: str, markdown_body: str) -> Path:
+    """DOCX uses Calibri / Calibri Light (common enterprise stack; aligns with UI sans-serif tone)."""
     from docx import Document
     from docx.shared import Pt
 
     path.parent.mkdir(parents=True, exist_ok=True)
     doc = Document()
+    normal = doc.styles["Normal"]
+    normal.font.name = "Calibri"
+    normal.font.size = Pt(11)
+    try:
+        title_style = doc.styles["Title"]
+        title_style.font.name = "Calibri Light"
+        title_style.font.size = Pt(26)
+        title_style.font.bold = True
+    except KeyError:
+        pass
     doc.add_heading(title, 0)
     for para in markdown_body.split("\n\n"):
         p = doc.add_paragraph()
         for line in para.split("\n"):
             run = p.add_run(line.strip() + "\n")
+            run.font.name = "Calibri"
             run.font.size = Pt(11)
     doc.save(str(path))
     return path

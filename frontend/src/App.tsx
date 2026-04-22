@@ -1,10 +1,12 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import { isPlatformAdmin } from "./auth/roleUtils";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoader } from "./components/PageLoader";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RequireRole } from "./routes/RequireRole";
+import { AdminLayout } from "./layouts/AdminLayout";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -25,7 +27,18 @@ const ProjectForecastPage = lazy(() => import("./pages/ProjectForecastPage"));
 const ProjectRecommendationsPage = lazy(() => import("./pages/ProjectRecommendationsPage"));
 const ProjectReportsPage = lazy(() => import("./pages/ProjectReportsPage"));
 const ProjectReportsHistoryPage = lazy(() => import("./pages/ProjectReportsHistoryPage"));
+const ProjectHistoryPage = lazy(() => import("./pages/ProjectHistoryPage"));
 const MetricsDashboardPage = lazy(() => import("./pages/MetricsDashboardPage"));
+const PortfolioPage = lazy(() => import("./pages/PortfolioPage"));
+const LogsPage = lazy(() => import("./pages/LogsPage"));
+const ReportsHubPage = lazy(() => import("./pages/ReportsHubPage"));
+const RisksHubPage = lazy(() => import("./pages/RisksHubPage"));
+const RecommendationsHubPage = lazy(() => import("./pages/RecommendationsHubPage"));
+const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AdminBrandingPage = lazy(() => import("./pages/AdminBrandingPage"));
+const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
+const AdminSystemPage = lazy(() => import("./pages/AdminSystemPage"));
 
 function AuthShell() {
   return (
@@ -44,7 +57,9 @@ function RootRedirect() {
   if (!ready) {
     return <PageLoader />;
   }
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) {
+    return <Navigate to={isPlatformAdmin(user.role) ? "/admin" : "/dashboard"} replace />;
+  }
   return <Navigate to="/login" replace />;
 }
 
@@ -59,6 +74,57 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
       <Route element={<ProtectedRoute />}>
+        <Route
+          path="/admin"
+          element={
+            <ErrorBoundary>
+              <AdminLayout />
+            </ErrorBoundary>
+          }
+        >
+          <Route element={<RequireRole roles={["admin", "super_admin"]} />}>
+            <Route
+              index
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminDashboardPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="branding"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminBrandingPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <UsersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="audit"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminAuditPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="system"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminSystemPage />
+                </Suspense>
+              }
+            />
+          </Route>
+        </Route>
         <Route
           path="/dashboard"
           element={
@@ -140,10 +206,66 @@ export default function App() {
             }
           />
           <Route
+            path="projects/:projectId/history"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ProjectHistoryPage />
+              </Suspense>
+            }
+          />
+          <Route
             path="metrics"
             element={
               <Suspense fallback={<PageLoader />}>
                 <MetricsDashboardPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="portfolio"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <PortfolioPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ReportsHubPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="risks"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <RisksHubPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="recommendations"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <RecommendationsHubPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="templates"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <TemplatesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="logs"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <LogsPage />
               </Suspense>
             }
           />
@@ -179,16 +301,6 @@ export default function App() {
               </Suspense>
             }
           />
-          <Route element={<RequireRole roles={["admin"]} />}>
-            <Route
-              path="users"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <UsersPage />
-                </Suspense>
-              }
-            />
-          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

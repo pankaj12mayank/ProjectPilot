@@ -5,7 +5,7 @@ import { Card } from "../components/ui/Card";
 import { FormField } from "../components/ui/FormField";
 import { Modal } from "../components/ui/Modal";
 import { Table, type Column } from "../components/ui/Table";
-import type { UserRole } from "../auth/types";
+import { USER_ROLE_OPTIONS, type UserRole } from "../auth/types";
 
 type UserRow = {
   id: string;
@@ -51,7 +51,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (modal) {
-      setRole(modal.role);
+      setRole(USER_ROLE_OPTIONS.includes(modal.role as UserRole) ? modal.role : "member");
       setActive(modal.is_active);
     }
   }, [modal]);
@@ -152,9 +152,11 @@ export default function UsersPage() {
                 value={role}
                 onChange={(e) => setRole(e.target.value as UserRole)}
               >
-                <option value="member">member</option>
-                <option value="manager">manager</option>
-                <option value="admin">admin</option>
+                {USER_ROLE_OPTIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
               </select>
             </FormField>
             <FormField label="Active" htmlFor="edit-active">

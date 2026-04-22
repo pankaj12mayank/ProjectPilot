@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,7 @@ from app.security import (
     create_refresh_token,
     decode_refresh_token,
 )
-from app.services import user_service
+from app.services import event_log_service, user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,6 +34,22 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> UserOut:
         user = user_service.register_user(db, body.email, body.password, body.full_name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    event_log_service.write_audit(
+        db,
+        actor_user_id=user.id,
+        action="auth.register",
+        entity_type="user",
+        entity_id=user.id,
+        detail={"email": user.email},
+    )
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=None,
+        kind="auth.register",
+        summary=f"Registered account {user.email}",
+        detail={"user_id": user.id},
+    )
     return UserOut.model_validate(user)
 
 
@@ -44,10 +60,38 @@ def _issue_tokens(user: User) -> TokenResponse:
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     user = user_service.authenticate(db, body.email, body.password)
     if user is None:
+        ip = request.client.host if request.client else None
+        event_log_service.write_audit(
+            db,
+            actor_user_id=None,
+            action="auth.login.failed",
+            entity_type="credentials",
+            entity_id=None,
+            detail={"email_hint": (body.email[:2] + "***") if len(body.email) > 2 else "***"},
+            ip_address=ip,
+        )
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    ip = request.client.host if request.client else None
+    event_log_service.write_audit(
+        db,
+        actor_user_id=user.id,
+        action="auth.login.success",
+        entity_type="user",
+        entity_id=user.id,
+        detail={},
+        ip_address=ip,
+    )
+    event_log_service.write_activity(
+        db,
+        actor_user_id=user.id,
+        project_id=None,
+        kind="auth.login",
+        summary=f"Signed in {user.email}",
+        detail={},
+    )
     return _issue_tokens(user)
 
 

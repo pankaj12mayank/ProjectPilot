@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { postLoginPath } from "../auth/roleUtils";
+import { useBranding } from "../branding/BrandingProvider";
 import { validateLoginForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
 
 export default function LoginPage() {
+  const { branding } = useBranding();
   const { login, user, ready } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,7 +29,7 @@ export default function LoginPage() {
     );
   }
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={postLoginPath(user.role, from)} replace />;
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -37,8 +40,8 @@ export default function LoginPage() {
     if (Object.keys(v).length > 0) return;
     setBusy(true);
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      const me = await login(email, password);
+      navigate(postLoginPath(me.role, from), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -46,9 +49,23 @@ export default function LoginPage() {
     }
   }
 
+  const title = (branding?.product_name || "ProjectPilot").trim() || "ProjectPilot";
+  const bg = branding?.asset_urls?.login_bg;
+
   return (
-    <div className="pp-auth">
-      <Card title="Sign in">
+    <div
+      className="pp-auth"
+      style={
+        bg
+          ? {
+              backgroundImage: `linear-gradient(rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.92)), url(${bg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : undefined
+      }
+    >
+      <Card title={`Sign in to ${title}`}>
         <form className="pp-form" onSubmit={onSubmit} noValidate>
           {error ? (
             <p className="pp-field__error" role="alert">

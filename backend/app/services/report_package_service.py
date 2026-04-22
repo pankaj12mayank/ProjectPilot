@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from app.config.settings import Settings
-from app.db.models import ProjectReportRun
+from app.db.models import GeneratedReportArtifact, ProjectMetricsSnapshot, ProjectReportRun
 from app.services.analytics.project_health import build_project_health_payload
 from app.services.intelligence.package import build_intelligence_bundle
+from app.services.metrics_snapshot import snapshot_metrics_json
 from app.services.reports.multiformat import (
     write_client_docx,
     write_email_txt,
@@ -30,6 +31,7 @@ def generate_project_report_package(
     project_name: str,
     settings: Settings,
     job_id: str | None = None,
+    actor_user_id: str | None = None,
 ) -> dict[str, Any]:
     job = job_id or str(uuid.uuid4())
     out_dir = settings.outputs_dir / "reports" / job
@@ -126,9 +128,60 @@ def generate_project_report_package(
             outputs_json=json.dumps(outputs),
         )
         db.add(row)
+        db.flush()
+        snap = ProjectMetricsSnapshot(
+            id=str(uuid.uuid4()),
+            project_id=project_id,
+            report_run_id=job,
+            source="report_package",
+            metrics_json=snapshot_metrics_json(health),
+        )
+        db.add(snap)
+        for key, path in outputs.items():
+            if key.endswith("_error") or path is None or not isinstance(path, str):
+                continue
+            db.add(
+                GeneratedReportArtifact(
+                    id=str(uuid.uuid4()),
+                    project_id=project_id,
+                    report_run_id=job,
+                    artifact_key=str(key)[:64],
+                    relative_path=path[:4096],
+                ),
+            )
         db.commit()
     except Exception:
         logger.exception("Persist ProjectReportRun failed job=%s", job)
         db.rollback()
+
+    if actor_user_id:
+        try:
+            from app.services import event_log_service
+
+            event_log_service.write_activity(
+                db,
+                actor_user_id=actor_user_id,
+                project_id=project_id,
+                kind="report.generate",
+                summary=f"Intelligence report package generated for {project_name}",
+                detail={"job_id": job, "project_id": project_id},
+            )
+            event_log_service.write_notification(
+                db,
+                user_id=actor_user_id,
+                channel="in_app",
+                title="Report package ready",
+                detail={"project_id": project_id, "project_name": project_name, "job_id": job},
+            )
+            event_log_service.write_audit(
+                db,
+                actor_user_id=actor_user_id,
+                action="report.generate",
+                entity_type="project",
+                entity_id=project_id,
+                detail={"job_id": job},
+            )
+        except Exception:
+            logger.exception("Event log after report failed job=%s", job)
 
     return payload

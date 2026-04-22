@@ -17,7 +17,7 @@ export function Table<T extends object>({
 }) {
   return (
     <div className="pp-table-wrap">
-      <table className="pp-table">
+      <table className="pp-table pp-type-table">
         <thead>
           <tr>
             {columns.map((c) => (

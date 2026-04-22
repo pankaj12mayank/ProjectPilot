@@ -16,13 +16,21 @@ import {
   YAxis,
 } from "recharts";
 import { fetchProjectHealth, type ProjectHealthResponse } from "../api/analytics";
+import { recordProjectMetricsSnapshot } from "../api/projects";
 import { KpiCard } from "../components/KpiCard";
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/PageLoader";
 import { Table } from "../components/ui/Table";
 import { Button } from "../components/ui/Button";
+import { CHART_AXIS_STROKE, CHART_GRID_STROKE, CHART_SERIES } from "@/theme";
 
-const SEVERITY_COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e"];
+const tooltipBox = {
+  borderRadius: 12,
+  border: "1px solid hsl(var(--border))",
+  background: "hsl(var(--card))",
+  color: "hsl(var(--card-foreground))",
+  fontSize: 12,
+};
 
 function fmt(n: number | null | undefined, digits = 1, suffix = ""): string {
   if (n == null || !Number.isFinite(Number(n))) return "—";
@@ -75,6 +83,8 @@ export default function ProjectHealthPage() {
   const [data, setData] = useState<ProjectHealthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [snapshotMsg, setSnapshotMsg] = useState<string | null>(null);
+  const [snapshotBusy, setSnapshotBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,6 +142,20 @@ export default function ProjectHealthPage() {
     return Math.max(0, Math.min(100, v));
   }, [data]);
 
+  async function handleRecordSnapshot() {
+    if (!projectId) return;
+    setSnapshotMsg(null);
+    setSnapshotBusy(true);
+    try {
+      const r = await recordProjectMetricsSnapshot(projectId);
+      setSnapshotMsg(`Snapshot saved (${r.snapshot_id.slice(0, 8)}…). Portfolio charts will include this point.`);
+    } catch (e) {
+      setSnapshotMsg(e instanceof Error ? e.message : "Snapshot failed");
+    } finally {
+      setSnapshotBusy(false);
+    }
+  }
+
   if (error && !data) {
     return (
       <Card title="Project health">
@@ -154,6 +178,18 @@ export default function ProjectHealthPage() {
             <Button type="button" variant="secondary" className="pp-btn--sm" onClick={() => setRefreshKey((k) => k + 1)}>
               Refresh metrics
             </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="pp-btn--sm"
+              disabled={snapshotBusy}
+              onClick={() => void handleRecordSnapshot()}
+            >
+              {snapshotBusy ? "Saving…" : "Record portfolio snapshot"}
+            </Button>
+            <Link to="/dashboard/portfolio" className="pp-btn pp-btn--secondary pp-btn--sm">
+              Portfolio
+            </Link>
             <Link to={`/dashboard/projects/${projectId}/forecast`} className="pp-btn pp-btn--secondary pp-btn--sm">
               Forecast
             </Link>
@@ -175,6 +211,11 @@ export default function ProjectHealthPage() {
         {error ? (
           <p className="pp-field__error" role="alert">
             {error}
+          </p>
+        ) : null}
+        {snapshotMsg ? (
+          <p className={snapshotMsg.includes("failed") || snapshotMsg.includes("Error") ? "pp-field__error" : "pp-success"}>
+            {snapshotMsg}
           </p>
         ) : null}
         {!data.data_complete ? (
@@ -286,11 +327,18 @@ export default function ProjectHealthPage() {
               {weeklyData.length ? (
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={weeklyData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="completion" name="Completion %" stroke="#2563eb" strokeWidth={2} dot />
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                    <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                    <Tooltip contentStyle={tooltipBox} />
+                    <Line
+                      type="monotone"
+                      dataKey="completion"
+                      name="Completion %"
+                      stroke={CHART_SERIES[0]}
+                      strokeWidth={2}
+                      dot={false}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
@@ -303,11 +351,11 @@ export default function ProjectHealthPage() {
             <div className="pp-chart-box">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={spiCpiData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, "auto"]} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#2563eb" name="Index" radius={[6, 6, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                  <YAxis domain={[0, "auto"]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                  <Tooltip contentStyle={tooltipBox} />
+                  <Bar dataKey="value" fill={CHART_SERIES[0]} name="Index" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -319,7 +367,7 @@ export default function ProjectHealthPage() {
                 <PieChart>
                   <Pie data={severityData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={88} label>
                     {severityData.map((_, i) => (
-                      <Cell key={String(i)} fill={SEVERITY_COLORS[i % SEVERITY_COLORS.length]} />
+                      <Cell key={String(i)} fill={CHART_SERIES[i % CHART_SERIES.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -334,13 +382,21 @@ export default function ProjectHealthPage() {
               {resourceData.length ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={resourceData} margin={{ top: 8, right: 8, left: 0, bottom: 64 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="task" interval={0} angle={-28} textAnchor="end" height={70} tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                    <XAxis
+                      dataKey="task"
+                      interval={0}
+                      angle={-28}
+                      textAnchor="end"
+                      height={70}
+                      tick={{ fontSize: 10 }}
+                      stroke={CHART_AXIS_STROKE}
+                    />
+                    <YAxis tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                    <Tooltip contentStyle={tooltipBox} />
                     <Legend />
-                    <Bar dataKey="planned" fill="#94a3b8" name="Planned h" />
-                    <Bar dataKey="actual" fill="#2563eb" name="Actual h" />
+                    <Bar dataKey="planned" fill="hsl(var(--muted-foreground) / 0.45)" name="Planned h" />
+                    <Bar dataKey="actual" fill={CHART_SERIES[0]} name="Actual h" />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -357,11 +413,11 @@ export default function ProjectHealthPage() {
                   layout="vertical"
                   margin={{ top: 8, right: 16, left: 80, bottom: 8 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis type="category" dataKey="name" width={76} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => [`${Number(v).toFixed(1)}%`, ""]} />
-                  <Bar dataKey="v" fill="#16a34a" radius={[0, 6, 6, 0]} barSize={28} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
+                  <YAxis type="category" dataKey="name" width={76} tick={{ fontSize: 12 }} stroke={CHART_AXIS_STROKE} />
+                  <Tooltip formatter={(v: number) => [`${Number(v).toFixed(1)}%`, ""]} contentStyle={tooltipBox} />
+                  <Bar dataKey="v" fill="hsl(var(--success))" radius={[0, 6, 6, 0]} barSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -21,10 +21,10 @@ import type { User } from "./types";
 type AuthState = {
   user: User | null;
   ready: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, fullName: string) => Promise<User>;
   logout: () => void;
-  refreshMe: () => Promise<void>;
+  refreshMe: () => Promise<User | null>;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -33,13 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
 
-  const refreshMe = useCallback(async () => {
+  const refreshMe = useCallback(async (): Promise<User | null> => {
     const access = getToken();
     const refresh = getRefreshToken();
     if (!access && !refresh) {
       setUser(null);
       setReady(true);
-      return;
+      return null;
     }
     if (!access && refresh) {
       const ok = await fetch(apiUrl("/auth/refresh"), {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTokens();
         setUser(null);
         setReady(true);
-        return;
+        return null;
       }
     }
     const res = await apiFetch("/users/me");
@@ -65,18 +65,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTokens();
       setUser(null);
       setReady(true);
-      return;
+      return null;
     }
     const data = await parseJson<User>(res);
     setUser(data);
     setReady(true);
+    return data;
   }, []);
 
   useEffect(() => {
     void refreshMe();
   }, [refreshMe]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<User> => {
     const res = await apiFetch("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
@@ -91,11 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (!data.access_token || !data.refresh_token) throw new Error("No tokens returned");
     setTokens(data.access_token, data.refresh_token);
-    await refreshMe();
+    const me = await refreshMe();
+    if (!me) throw new Error("Login failed");
+    return me;
   }, [refreshMe]);
 
   const register = useCallback(
-    async (email: string, password: string, fullName: string) => {
+    async (email: string, password: string, fullName: string): Promise<User> => {
       const res = await apiFetch("/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password, full_name: fullName }),
@@ -104,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         throw new Error(typeof data.detail === "string" ? data.detail : "Registration failed");
       }
-      await login(email, password);
+      return login(email, password);
     },
     [login],
   );
