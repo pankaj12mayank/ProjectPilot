@@ -16,7 +16,8 @@ export type ToastItem = {
 };
 
 type ToastContextValue = {
-  push: (kind: ToastKind, message: string) => void;
+  /** @param durationMs default 5200 success/info, 7200 error */
+  push: (kind: ToastKind, message: string, durationMs?: number) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -26,12 +27,15 @@ let _toastId = 0;
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
 
-  const push = useCallback((kind: ToastKind, message: string) => {
+  const push = useCallback((kind: ToastKind, message: string, durationMs?: number) => {
     const id = ++_toastId;
     setItems((prev) => [...prev, { id, kind, message }]);
+    const ms =
+      durationMs ??
+      (kind === "error" ? 7200 : 5200);
     window.setTimeout(() => {
       setItems((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
+    }, ms);
   }, []);
 
   const value = useMemo(() => ({ push }), [push]);

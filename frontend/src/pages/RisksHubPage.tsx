@@ -9,13 +9,17 @@ export default function RisksHubPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Risks</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Portfolio risk posture, RAG signals, and per-project RAID context.
+          Portfolio risk posture, RAG signals, and per-project RAID context. Use{" "}
+          <Link to="/dashboard/projects" className="text-primary underline-offset-4 hover:underline">
+            Projects → Risks
+          </Link>{" "}
+          to register tracked risks (severity / status) that appear on the dashboard and in generated reports.
         </p>
       </div>
       <div className="grid gap-5 md:grid-cols-2">
         <Card className="border-border/80">
           <CardHeader>
-            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-700">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
               <Shield className="size-5" />
             </div>
             <CardTitle className="text-base">Portfolio heatmap</CardTitle>

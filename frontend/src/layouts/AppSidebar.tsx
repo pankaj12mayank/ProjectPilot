@@ -22,8 +22,7 @@ import { Button } from "@/components/shadcn/button";
 import { ScrollArea } from "@/components/shadcn/scroll-area";
 import { Separator } from "@/components/shadcn/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
-import { useSidebarLogoInvertClass } from "@/hooks/useSidebarLogoInvertClass";
-import type { SidebarLogoFilter } from "@/api/branding";
+import { useSidebarLogoInvertClass, type SidebarLogoFilter } from "@/hooks/useSidebarLogoInvertClass";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/theme";
 
@@ -42,7 +41,7 @@ const primaryNav: NavItem[] = [
   { to: "/dashboard/reports", label: "Reports", icon: ScrollText },
   { to: "/dashboard/risks", label: "Risks", icon: Shield },
   { to: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles },
-  { to: "/dashboard/logs", label: "Audit logs", icon: ClipboardList },
+  { to: "/dashboard/logs", label: "Activity & logs", icon: ClipboardList },
   { to: "/dashboard/templates", label: "Templates", icon: FileStack },
 ];
 
@@ -108,11 +107,12 @@ export function AppSidebar({
   const { user } = useAuth();
   const { branding } = useBranding();
   const { resolved } = useTheme();
-  const product = (branding?.product_name || "ProjectPilot").trim() || "ProjectPilot";
-  const logoLight = branding?.asset_urls?.sidebar_logo as string | undefined;
-  const logoDark = (branding?.asset_urls?.sidebar_logo_dark as string | undefined) || logoLight;
+  const product = (branding?.meta_title || "ProjectPilot").trim() || "ProjectPilot";
+  const urls = branding?.asset_urls ?? {};
+  const logoLight = urls.logo as string | undefined;
+  const logoDark = (urls.logo_dark as string | undefined) || logoLight;
   const logo = resolved === "dark" ? logoDark : logoLight;
-  const logoFilter = (branding?.sidebar_logo_filter ?? "auto") as SidebarLogoFilter;
+  const logoFilter: SidebarLogoFilter = "auto";
   const logoInvertClass = useSidebarLogoInvertClass(logo, logoFilter);
 
   const showAdmin = Boolean(user && isPlatformAdmin(user.role));

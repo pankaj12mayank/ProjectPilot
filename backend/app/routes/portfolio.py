@@ -9,10 +9,12 @@ from app.db.models import User
 from app.schemas.portfolio import (
     PortfolioComparisonOut,
     PortfolioDashboardOut,
+    PortfolioOpenRiskRow,
     PortfolioReportHistoryRow,
     PortfolioSummaryOut,
     RiskHeatmapOut,
 )
+from app.services import risk_service
 from app.services.portfolio_service import (
     build_cross_project_comparison,
     build_portfolio_dashboard,
@@ -22,6 +24,17 @@ from app.services.portfolio_service import (
 )
 
 router = APIRouter()
+
+
+@router.get("/open-risks", response_model=list[PortfolioOpenRiskRow])
+def portfolio_open_risks(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    limit: int = Query(40, ge=1, le=100),
+) -> list[PortfolioOpenRiskRow]:
+    """Open registered project risks across projects visible to the viewer (dashboard)."""
+    rows = risk_service.list_open_risks_for_viewer(db, user, limit=limit)
+    return [PortfolioOpenRiskRow.model_validate(r) for r in rows]
 
 
 @router.get("/summary", response_model=PortfolioSummaryOut)

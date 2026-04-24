@@ -1,26 +1,13 @@
-import { apiFetch, apiUrl, parseJson } from "./client";
-
-export type SidebarLogoFilter = "auto" | "invert" | "original";
+import { apiFetch, apiUrl, parseJson, readJsonOk } from "./client";
 
 export type BrandingPublic = {
-  product_name: string;
-  product_tagline: string;
-  footer_text: string;
-  support_email: string;
-  company_address: string;
-  social: Record<string, string | null | undefined>;
   meta_title: string;
   meta_description: string;
-  default_domain_url: string;
-  company_website_url: string;
-  public_api_url: string;
-  public_app_url: string;
+  social: Record<string, string | null | undefined>;
   asset_version: number;
   asset_urls: Record<string, string | null | undefined>;
   files_base: string;
-  sidebar_logo_filter?: SidebarLogoFilter;
-  accent_color_light?: string;
-  accent_color_dark?: string;
+  accent_color?: string;
 };
 
 export type BrandingAdmin = BrandingPublic & {
@@ -38,8 +25,7 @@ export async function fetchBrandingPublic(signal?: AbortSignal): Promise<Brandin
 
 export async function fetchBrandingAdmin(): Promise<BrandingAdmin> {
   const res = await apiFetch("/admin/branding");
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<BrandingAdmin>(res);
+  return readJsonOk<BrandingAdmin>(res);
 }
 
 export async function patchBrandingAdmin(body: Record<string, unknown>): Promise<BrandingAdmin> {
@@ -47,17 +33,12 @@ export async function patchBrandingAdmin(body: Record<string, unknown>): Promise
     method: "PATCH",
     body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(t || "Save failed");
-  }
-  return parseJson<BrandingAdmin>(res);
+  return readJsonOk<BrandingAdmin>(res);
 }
 
 export async function deleteBrandingAsset(slot: string): Promise<BrandingAdmin> {
   const res = await apiFetch(`/admin/branding/assets/${encodeURIComponent(slot)}`, { method: "DELETE" });
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<BrandingAdmin>(res);
+  return readJsonOk<BrandingAdmin>(res);
 }
 
 export type UploadBrandingResult = {

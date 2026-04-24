@@ -37,6 +37,13 @@ class Project(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     owner_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), index=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: Optional planning window (shown in UI; does not drive calculations alone).
+    planned_start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    planned_end_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    #: JSON array of user ids invited to the project (informational; access still follows owner + role rules).
+    team_user_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    #: Optional built-in template chosen at creation (`project_templates.SAMPLE_TEMPLATES`).
+    template_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -122,6 +129,34 @@ class GeneratedReportArtifact(Base):
     artifact_key: Mapped[str] = mapped_column(String(64), index=True)
     relative_path: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class ProjectRisk(Base):
+    """User-registered project risk (separate from ingested RAID rows); optional link to a report run."""
+
+    __tablename__ = "project_risks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), index=True)
+    title: Mapped[str] = mapped_column(String(500))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    severity: Mapped[str] = mapped_column(String(16), default="medium", index=True)
+    status: Mapped[str] = mapped_column(String(16), default="open", index=True)
+    report_run_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("project_report_runs.id"),
+        nullable=True,
+        index=True,
+    )
+    created_by: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )

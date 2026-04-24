@@ -7,10 +7,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { BrandingPublic, SidebarLogoFilter } from "../api/branding";
+import type { BrandingPublic } from "../api/branding";
 import { fetchBrandingPublic } from "../api/branding";
 import { hexToHslSpace } from "@/lib/colorUtils";
-import { useTheme } from "@/theme";
 
 type BrandingState = {
   branding: BrandingPublic | null;
@@ -23,44 +22,24 @@ type BrandingState = {
 const BrandingContext = createContext<BrandingState | null>(null);
 
 const defaultBranding: BrandingPublic = {
-  product_name: "ProjectPilot",
-  product_tagline: "",
-  footer_text: "",
-  support_email: "",
-  company_address: "",
-  social: {},
   meta_title: "",
   meta_description: "",
-  default_domain_url: "",
-  company_website_url: "",
-  public_api_url: "",
-  public_app_url: "",
+  social: {},
   asset_version: 1,
   asset_urls: {},
   files_base: "",
-  sidebar_logo_filter: "auto",
-  accent_color_light: "",
-  accent_color_dark: "",
+  accent_color: "",
 };
-
-function normalizeSidebarFilter(v: string | undefined | null): SidebarLogoFilter {
-  const x = (v || "auto").toLowerCase();
-  return x === "invert" || x === "original" ? x : "auto";
-}
 
 function BrandingDocumentEffects() {
   const { branding } = useBranding();
-  const { resolved } = useTheme();
 
   useEffect(() => {
     const b = branding ?? defaultBranding;
-    const title = (b.meta_title || b.product_name || "ProjectPilot").trim();
+    const title = (b.meta_title || "ProjectPilot").trim() || "ProjectPilot";
     document.title = title;
 
-    const favLight = b.asset_urls?.favicon as string | undefined;
-    const favDark = (b.asset_urls?.favicon_dark as string | undefined) || favLight;
-    const fav = resolved === "dark" ? favDark : favLight;
-
+    const fav = b.asset_urls?.favicon as string | undefined;
     let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!link) {
       link = document.createElement("link");
@@ -70,12 +49,25 @@ function BrandingDocumentEffects() {
     if (fav) {
       link.href = fav;
     }
-  }, [branding, resolved]);
+
+    const desc = (b.meta_description || "").trim();
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    if (desc) {
+      if (!meta) {
+        meta = document.createElement("meta");
+        meta.name = "description";
+        document.head.appendChild(meta);
+      }
+      meta.content = desc;
+    } else if (meta) {
+      meta.remove();
+    }
+  }, [branding]);
 
   useEffect(() => {
     const b = branding ?? defaultBranding;
     const root = document.documentElement;
-    const hex = resolved === "dark" ? (b.accent_color_dark || "").trim() : (b.accent_color_light || "").trim();
+    const hex = (b.accent_color || "").trim();
     const hsl = hex ? hexToHslSpace(hex) : null;
     if (hsl) {
       root.style.setProperty("--brand-accent", hsl);
@@ -84,7 +76,7 @@ function BrandingDocumentEffects() {
       root.style.removeProperty("--brand-accent");
       root.style.removeProperty("--chart-3");
     }
-  }, [branding, resolved]);
+  }, [branding]);
 
   return null;
 }
@@ -102,9 +94,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       const b = await fetchBrandingPublic();
       setBranding({
         ...b,
-        sidebar_logo_filter: normalizeSidebarFilter(b.sidebar_logo_filter),
-        accent_color_light: (b.accent_color_light || "").trim(),
-        accent_color_dark: (b.accent_color_dark || "").trim(),
+        accent_color: (b.accent_color || "").trim(),
       });
       setVersion((v) => v + 1);
     } catch (e) {

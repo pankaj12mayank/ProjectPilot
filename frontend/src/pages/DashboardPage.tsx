@@ -16,8 +16,10 @@ import { useAuth } from "../auth/AuthContext";
 import { isPlatformAdmin } from "../auth/roleUtils";
 import {
   fetchPortfolioComparison,
+  fetchPortfolioOpenRisks,
   fetchPortfolioSummary,
   type PortfolioComparison,
+  type PortfolioOpenRiskRow,
   type PortfolioProjectRow,
   type PortfolioSummary,
 } from "../api/portfolio";
@@ -86,6 +88,7 @@ export default function DashboardPage() {
   const { user, ready } = useAuth();
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [comparison, setComparison] = useState<PortfolioComparison | null>(null);
+  const [openRisks, setOpenRisks] = useState<PortfolioOpenRiskRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,10 +98,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [s, c] = await Promise.all([fetchPortfolioSummary(), fetchPortfolioComparison()]);
+        const [s, c, risks] = await Promise.all([
+          fetchPortfolioSummary(),
+          fetchPortfolioComparison(),
+          fetchPortfolioOpenRisks(25).catch(() => [] as PortfolioOpenRiskRow[]),
+        ]);
         if (!cancelled) {
           setSummary(s);
           setComparison(c);
+          setOpenRisks(risks);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
@@ -353,6 +361,37 @@ export default function DashboardPage() {
               </LineChart>
             </ResponsiveContainer>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/80">
+        <CardHeader>
+          <CardTitle className="text-base">Open registered risks</CardTitle>
+          <CardDescription>Project risks you created (not ingested RAID rows). High-severity items feed report mitigations.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!openRisks?.length ? (
+            <p className="text-sm text-muted-foreground">No open registered risks across your projects.</p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {openRisks.map((r) => (
+                <li key={r.risk_id} className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border/60 pb-2 last:border-0 last:pb-0">
+                  <span>
+                    <Link className="font-medium text-foreground hover:underline" to={`/dashboard/projects/${r.project_id}/risks`}>
+                      {r.project_name}
+                    </Link>
+                    <span className="text-muted-foreground"> — {r.title}</span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 capitalize">{r.severity}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Button asChild variant="outline" size="sm" className="mt-4 rounded-xl">
+            <Link to="/dashboard/projects">Manage in projects</Link>
+          </Button>
         </CardContent>
       </Card>
 

@@ -19,6 +19,7 @@ from app.services.analytics.milestone_engine import compute_milestones
 from app.services.analytics.rag_engine import compute_rag
 from app.services.analytics.resource_engine import compute_resources
 from app.services.analytics.risk_engine import compute_risk
+from app.services import risk_service
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +127,7 @@ def build_project_health_payload(db: Session, project_id: str, settings: Setting
         }
 
         data_complete = len(missing) == 0
+        registered_risks = risk_service.list_registered_risk_dicts(db, project_id)
 
         return {
             "project_id": project_id,
@@ -140,9 +142,15 @@ def build_project_health_payload(db: Session, project_id: str, settings: Setting
             "resources": resources,
             "dependencies": dependencies,
             "charts": charts,
+            "registered_risks": registered_risks,
         }
     except Exception:
         logger.exception("build_project_health_payload failed project_id=%s", project_id)
+        reg: list[dict] = []
+        try:
+            reg = risk_service.list_registered_risk_dicts(db, project_id)
+        except Exception:
+            logger.exception("registered_risks load failed project_id=%s", project_id)
         return {
             "project_id": project_id,
             "data_complete": False,
@@ -166,4 +174,5 @@ def build_project_health_payload(db: Session, project_id: str, settings: Setting
                 "completion_gauge": {"value": 0},
                 "spi_cpi": {"spi": 0, "cpi": 0},
             },
+            "registered_risks": reg,
         }

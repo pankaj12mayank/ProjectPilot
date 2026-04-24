@@ -10,6 +10,7 @@ from app.db.models import (
     ProjectFile,
     ProjectMetricsSnapshot,
     ProjectReportRun,
+    ProjectRisk,
     User,
 )
 from app.db.session import get_db
@@ -26,6 +27,7 @@ __all__ = [
     "ProjectFile",
     "ProjectMetricsSnapshot",
     "ProjectReportRun",
+    "ProjectRisk",
     "User",
     "get_db",
 ]

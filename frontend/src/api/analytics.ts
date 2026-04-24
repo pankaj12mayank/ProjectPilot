@@ -1,4 +1,4 @@
-import { apiFetch, parseJson } from "./client";
+import { apiFetch, readJsonOk } from "./client";
 
 export type RagDetail = {
   status: string;
@@ -10,10 +10,22 @@ export type RagDetail = {
   };
 };
 
+export type RegisteredRiskRow = {
+  id: string;
+  title: string;
+  description?: string | null;
+  severity: string;
+  status: string;
+  report_run_id?: string | null;
+  created_at?: string | null;
+};
+
 export type ProjectHealthResponse = {
   project_id: string;
   data_complete: boolean;
   missing_roles: string[];
+  /** Manually registered project risks (same source as /projects/{id}/risks). */
+  registered_risks?: RegisteredRiskRow[];
   rag: RagDetail;
   kpis: Record<string, number | null | undefined>;
   evm: Record<string, number | null | undefined>;
@@ -74,7 +86,7 @@ export type ProjectHealthResponse = {
 };
 
 export async function fetchProjectHealth(projectId: string): Promise<ProjectHealthResponse> {
-  const res = await apiFetch(`/projects/${projectId}/analytics/health`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<ProjectHealthResponse>(res);
+  const enc = encodeURIComponent(projectId);
+  const res = await apiFetch(`/projects/${enc}/analytics/health`);
+  return readJsonOk<ProjectHealthResponse>(res);
 }

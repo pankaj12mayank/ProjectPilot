@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from sqlalchemy.orm import Session
 
-from app.constants.roles import ADMIN, MANAGER, SUPER_ADMIN
+from app.constants.roles import ADMIN, PMO, PROJECT_MANAGER, SYSTEM_OWNER
 from app.db.models import User
 from app.db.session import get_db
 from app.security import decode_access_token
@@ -43,5 +43,5 @@ def require_roles(*allowed: str) -> Callable[..., User]:
     return _dep
 
 
-require_admin = require_roles(SUPER_ADMIN, ADMIN)
-require_manager_or_admin = require_roles(SUPER_ADMIN, ADMIN, MANAGER)
+require_admin = require_roles(SYSTEM_OWNER, ADMIN)
+require_manager_or_admin = require_roles(SYSTEM_OWNER, ADMIN, PMO, PROJECT_MANAGER)

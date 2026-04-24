@@ -1,31 +1,40 @@
-"""Application roles (stored on `users.role`)."""
+"""Application roles (stored on `users.role`).
 
-SUPER_ADMIN = "super_admin"
+Canonical values (API / UI):
+  system_owner — first / bootstrap account; not assignable via user API
+  admin, pmo, project_manager, client, member, viewer
+"""
+
+SYSTEM_OWNER = "system_owner"
 ADMIN = "admin"
 PMO = "pmo"
 PROJECT_MANAGER = "project_manager"
-DELIVERY_MANAGER = "delivery_manager"
 CLIENT = "client"
-VIEWER = "viewer"
-# Legacy aliases (still valid in DB)
-MANAGER = "manager"
 MEMBER = "member"
+VIEWER = "viewer"
 
 ALL_ROLES: tuple[str, ...] = (
-    SUPER_ADMIN,
+    SYSTEM_OWNER,
     ADMIN,
     PMO,
     PROJECT_MANAGER,
-    DELIVERY_MANAGER,
     CLIENT,
-    VIEWER,
-    MANAGER,
     MEMBER,
+    VIEWER,
 )
 
 ALL_ROLES_SET = frozenset(ALL_ROLES)
 
-BRAND_ADMIN_ROLES: tuple[str, ...] = (SUPER_ADMIN, ADMIN)
+# List/detail every project (navigation, portfolio scope, project access checks).
+ROLES_SEE_ALL_PROJECTS: frozenset[str] = frozenset({SYSTEM_OWNER, ADMIN})
+
+# Team pickers / assignable directory: internal roles that may list all users for assignment.
+ROLES_FULL_DIRECTORY_ASSIGNABLE: frozenset[str] = frozenset({SYSTEM_OWNER, ADMIN, PMO, PROJECT_MANAGER})
+
+# Backwards-compatible name: same as global project visibility (admin + system owner only).
+ROLES_WITH_ALL_PROJECTS_READ: frozenset[str] = ROLES_SEE_ALL_PROJECTS
+
+BRAND_ADMIN_ROLES: tuple[str, ...] = (SYSTEM_OWNER, ADMIN)
 
 
 def is_valid_role(role: str) -> bool:

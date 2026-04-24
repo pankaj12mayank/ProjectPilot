@@ -13,6 +13,7 @@ from app.db.models import GeneratedReportArtifact, ProjectMetricsSnapshot, Proje
 from app.services.analytics.project_health import build_project_health_payload
 from app.services.intelligence.package import build_intelligence_bundle
 from app.services.metrics_snapshot import snapshot_metrics_json
+from app.services.snapshot_storage import write_metrics_snapshot_file
 from app.services.reports.multiformat import (
     write_client_docx,
     write_email_txt,
@@ -117,6 +118,7 @@ def generate_project_report_package(
         "outputs": outputs,
     }
 
+    snap: ProjectMetricsSnapshot | None = None
     try:
         health_rag = (health.get("rag") or {}).get("status", "Green")
         headline = (bundle.get("forecast") or {}).get("headline", "") or ""
@@ -150,9 +152,17 @@ def generate_project_report_package(
                 ),
             )
         db.commit()
+        db.refresh(snap)
     except Exception:
         logger.exception("Persist ProjectReportRun failed job=%s", job)
         db.rollback()
+        snap = None
+
+    if snap is not None:
+        try:
+            write_metrics_snapshot_file(settings, snap)
+        except Exception:
+            logger.exception("Snapshot disk write failed job=%s", job)
 
     if actor_user_id:
         try:

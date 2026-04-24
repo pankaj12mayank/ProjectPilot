@@ -10,6 +10,14 @@ class MetricsSnapshotOut(BaseModel):
     created_at: str
 
 
+class MetricsSnapshotListItem(BaseModel):
+    snapshot_id: str
+    project_id: str
+    created_at: str
+    source: str
+    report_run_id: str | None = None
+
+
 class PortfolioReportHistoryRow(BaseModel):
     job_id: str
     project_id: str
@@ -17,6 +25,17 @@ class PortfolioReportHistoryRow(BaseModel):
     created_at: str
     rag_status: str
     forecast_headline: str | None
+
+
+class PortfolioOpenRiskRow(BaseModel):
+    risk_id: str
+    project_id: str
+    project_name: str
+    title: str
+    severity: str
+    status: str
+    report_run_id: str | None = None
+    created_at: str
 
 
 class PortfolioDashboardOut(BaseModel):

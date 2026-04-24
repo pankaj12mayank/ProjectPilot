@@ -1,9 +1,11 @@
 import type { UserRole } from "./types";
 
-const PLATFORM_ADMIN_ROLES: UserRole[] = ["admin", "super_admin"];
-
 export function isPlatformAdmin(role: UserRole | string | undefined): boolean {
-  return role === "admin" || role === "super_admin";
+  return role === "admin" || role === "system_owner";
+}
+
+export function isSystemOwner(role: UserRole | string | undefined): boolean {
+  return role === "system_owner";
 }
 
 /** Where to send the user immediately after a successful sign-in or registration. */

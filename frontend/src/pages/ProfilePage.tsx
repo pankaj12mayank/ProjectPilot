@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiFetch, parseJson } from "../api/client";
+import { apiFetch, isNetworkError, readJsonOk } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 import { validateEmail, validateFullName } from "../auth/validation";
 import { Button } from "../components/ui/Button";
@@ -26,19 +26,13 @@ export default function ProfilePage() {
       try {
         const res = await apiFetch("/users/me");
         if (cancelled) return;
-        if (!res.ok) {
-          const d = await parseJson<{ detail?: string }>(res);
-          setLoadError(typeof d.detail === "string" ? d.detail : "Could not load profile");
-          setLoadState("error");
-          return;
-        }
-        const u = await parseJson<{ full_name: string; email: string }>(res);
+        const u = await readJsonOk<{ full_name: string; email: string }>(res);
         setFullName(u.full_name);
         setEmail(u.email);
         setLoadState("ready");
-      } catch {
+      } catch (e) {
         if (!cancelled) {
-          setLoadError("Network error while loading profile.");
+          setLoadError(isNetworkError(e) ? "Network error — check connectivity and API URL." : (e instanceof Error ? e.message : "Could not load profile"));
           setLoadState("error");
         }
       }
@@ -65,10 +59,7 @@ export default function ProfilePage() {
         method: "PATCH",
         body: JSON.stringify({ full_name: fullName, email }),
       });
-      const data = await parseJson<{ detail?: string }>(res);
-      if (!res.ok) {
-        throw new Error(typeof data.detail === "string" ? data.detail : "Update failed");
-      }
+      await readJsonOk(res);
       setMessage("Profile saved.");
       await refreshMe();
     } catch (err) {

@@ -25,6 +25,7 @@ const ProjectUploadPage = lazy(() => import("./pages/ProjectUploadPage"));
 const ProjectHealthPage = lazy(() => import("./pages/ProjectHealthPage"));
 const ProjectForecastPage = lazy(() => import("./pages/ProjectForecastPage"));
 const ProjectRecommendationsPage = lazy(() => import("./pages/ProjectRecommendationsPage"));
+const ProjectRisksPage = lazy(() => import("./pages/ProjectRisksPage"));
 const ProjectReportsPage = lazy(() => import("./pages/ProjectReportsPage"));
 const ProjectReportsHistoryPage = lazy(() => import("./pages/ProjectReportsHistoryPage"));
 const ProjectHistoryPage = lazy(() => import("./pages/ProjectHistoryPage"));
@@ -82,7 +83,7 @@ export default function App() {
             </ErrorBoundary>
           }
         >
-          <Route element={<RequireRole roles={["admin", "super_admin"]} />}>
+          <Route element={<RequireRole roles={["admin", "system_owner"]} />}>
             <Route
               index
               element={
@@ -170,6 +171,14 @@ export default function App() {
             element={
               <Suspense fallback={<PageLoader />}>
                 <ProjectHealthPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="projects/:projectId/risks"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ProjectRisksPage />
               </Suspense>
             }
           />

@@ -21,8 +21,9 @@ def _rec(
     metric_refs: list[dict[str, Any]],
     root_cause_ids: list[str],
     risk_refs: dict[str, Any] | None = None,
+    engine: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    out: dict[str, Any] = {
         "priority": priority,
         "title": title,
         "detail": detail,
@@ -31,6 +32,85 @@ def _rec(
         "root_cause_ids": root_cause_ids,
         "risk_refs": risk_refs or {},
     }
+    if engine:
+        out["engine"] = engine
+    return out
+
+
+def build_rule_based_recommendations(health: dict[str, Any]) -> list[dict[str, Any]]:
+    """Deterministic suggestions from registered risks and SPI/CPI (no ML)."""
+    out: list[dict[str, Any]] = []
+    evm = health.get("evm") or {}
+    spi = evm.get("spi")
+    cpi = evm.get("cpi")
+    try:
+        spi_f = float(spi) if spi is not None and str(spi).strip() != "" else None
+    except (TypeError, ValueError):
+        spi_f = None
+    try:
+        cpi_f = float(cpi) if cpi is not None and str(cpi).strip() != "" else None
+    except (TypeError, ValueError):
+        cpi_f = None
+
+    for r in health.get("registered_risks") or []:
+        if str(r.get("status", "")).lower() != "open":
+            continue
+        sev = str(r.get("severity", "")).lower()
+        title = str(r.get("title") or "Registered risk").strip()
+        if sev == "high":
+            out.append(
+                _rec(
+                    1,
+                    f"Mitigation (registered): {title}",
+                    "Assign an owner, target date, and concrete mitigation steps; review weekly until the risk is closed.",
+                    "Risk owner / PM",
+                    metric_refs=[_metric("registered_risk", title, "project_risks")],
+                    root_cause_ids=[],
+                    risk_refs={"registered_risk_id": r.get("id"), "severity": sev},
+                    engine="rules",
+                ),
+            )
+        elif sev == "medium":
+            out.append(
+                _rec(
+                    2,
+                    f"Track registered risk: {title}",
+                    "Keep it on the RAID register with owners and dates; escalate if schedule or cost impact grows.",
+                    "PM",
+                    metric_refs=[_metric("registered_risk", title, "project_risks")],
+                    root_cause_ids=[],
+                    risk_refs={"registered_risk_id": r.get("id"), "severity": sev},
+                    engine="rules",
+                ),
+            )
+
+    if spi_f is not None and spi_f < 1.0:
+        out.append(
+            _rec(
+                2,
+                "Schedule performance improvement (SPI)",
+                f"SPI is {spi_f:.3f} (below 1.0). Re-baseline near-term work, clear blockers on the critical path, and re-check task estimates.",
+                "Project Manager",
+                metric_refs=[_metric("SPI", spi_f, "evm")],
+                root_cause_ids=[],
+                risk_refs={},
+                engine="rules",
+            ),
+        )
+    if cpi_f is not None and cpi_f < 1.0:
+        out.append(
+            _rec(
+                2,
+                "Cost performance improvement (CPI)",
+                f"CPI is {cpi_f:.3f} (below 1.0). Run variance analysis on top cost drivers and tighten scope / change control with finance.",
+                "PM / Finance",
+                metric_refs=[_metric("CPI", cpi_f, "evm")],
+                root_cause_ids=[],
+                risk_refs={},
+                engine="rules",
+            ),
+        )
+    return out
 
 
 def build_recommendations(
@@ -202,6 +282,8 @@ def build_recommendations(
                     risk_refs={"risk_score": rs},
                 ),
             )
+
+        recs = build_rule_based_recommendations(health) + recs
 
         seen: set[str] = set()
         unique: list[dict[str, Any]] = []

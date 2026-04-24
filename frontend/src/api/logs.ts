@@ -1,4 +1,4 @@
-import { apiFetch, parseJson } from "./client";
+import { apiFetch, readJsonOk } from "./client";
 
 export type AuditLogRow = {
   id: string;
@@ -62,8 +62,7 @@ export type AuditLogQuery = {
 
 export async function fetchAuditLogsPaged(q: AuditLogQuery = {}): Promise<Paginated<AuditLogRow>> {
   const res = await apiFetch(`/logs/audit${buildQuery(q)}`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<Paginated<AuditLogRow>>(res);
+  return readJsonOk<Paginated<AuditLogRow>>(res);
 }
 
 export type ActivityLogQuery = {
@@ -78,8 +77,7 @@ export type ActivityLogQuery = {
 
 export async function fetchActivityLogsPaged(q: ActivityLogQuery = {}): Promise<Paginated<ActivityLogRow>> {
   const res = await apiFetch(`/logs/activity${buildQuery(q)}`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<Paginated<ActivityLogRow>>(res);
+  return readJsonOk<Paginated<ActivityLogRow>>(res);
 }
 
 export type NotificationLogQuery = {
@@ -92,6 +90,5 @@ export type NotificationLogQuery = {
 
 export async function fetchNotificationLogsPaged(q: NotificationLogQuery = {}): Promise<Paginated<NotificationLogRow>> {
   const res = await apiFetch(`/logs/notifications${buildQuery(q)}`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<Paginated<NotificationLogRow>>(res);
+  return readJsonOk<Paginated<NotificationLogRow>>(res);
 }

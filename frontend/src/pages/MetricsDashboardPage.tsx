@@ -35,6 +35,15 @@ export default function MetricsDashboardPage() {
 
   return (
     <div className="pp-grid pp-grid--1">
+      <Card title="Cross-project analytics">
+        <p className="pp-muted">
+          For portfolio-wide KPIs, heatmaps, and trends across all projects you can access, use{" "}
+          <Link to="/dashboard/portfolio" className="pp-btn pp-btn--primary pp-btn--sm" style={{ display: "inline-flex" }}>
+            Portfolio
+          </Link>
+          .
+        </p>
+      </Card>
       <Card title="Metrics dashboard">
         <p className="pp-muted">
           KPI, EVM, RAID risk, milestones, resource variance, dependency baseline, and RAG are computed from{" "}

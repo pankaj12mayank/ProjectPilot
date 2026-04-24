@@ -1447,3 +1447,116 @@ code {
 .pp-sidebar__muted {
   color: var(--pp-sidebar-muted);
 }
+
+/* --- Project upload (STEP 7) --- */
+.pp-upload-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.pp-upload-hero {
+  padding: 1.25rem 1.35rem;
+  border-radius: var(--pp-radius);
+  border: 1px solid var(--pp-border);
+  background: linear-gradient(135deg, rgb(37 99 235 / 0.06), rgb(14 165 233 / 0.05));
+  box-shadow: var(--pp-shadow);
+}
+.pp-upload-breadcrumb {
+  font-size: 0.85rem;
+  color: var(--pp-muted);
+  margin-bottom: 0.65rem;
+}
+.pp-upload-breadcrumb__here {
+  color: var(--pp-text);
+  font-weight: 600;
+}
+.pp-upload-hero__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.35rem, 1.2vw + 1rem, 1.75rem);
+  font-family: var(--font-display, "Manrope", sans-serif);
+  letter-spacing: -0.02em;
+}
+.pp-upload-hero__sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  max-width: 62ch;
+}
+.pp-upload-layout {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 960px) {
+  .pp-upload-layout {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.pp-upload-aside .pp-card {
+  position: sticky;
+  top: 1rem;
+}
+.pp-upload-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.pp-format-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.pp-format-tab {
+  border: 1px solid var(--pp-border);
+  background: var(--pp-surface);
+  color: var(--pp-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.pp-format-tab:hover {
+  border-color: rgb(37 99 235 / 0.45);
+  color: var(--pp-text);
+}
+.pp-format-tab--on {
+  border-color: var(--pp-primary);
+  background: #eff6ff;
+  color: #1e40af;
+}
+.dark .pp-format-tab--on {
+  background: rgb(37 99 235 / 0.2);
+  color: var(--pp-text);
+}
+.pp-format-slot__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.pp-format-slot__title {
+  margin: 0;
+  font-size: 1rem;
+}
+.pp-format-slot__lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+.pp-format-slot__cols {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.pp-format-slot__mini .pp-table td {
+  font-size: 0.8rem;
+}

@@ -1,4 +1,4 @@
-import { apiFetch, parseJson } from "./client";
+import { apiFetch, readJsonOk } from "./client";
 
 export type PortfolioProjectRow = {
   project_id: string;
@@ -26,11 +26,6 @@ export type TrendPoint = {
   spi?: number | null;
   cpi?: number | null;
   risk_score?: number | null;
-};
-
-export type PortfolioDashboard = {
-  projects: PortfolioProjectRow[];
-  trends: Record<string, TrendPoint[]>;
 };
 
 export type PortfolioComparison = {
@@ -67,6 +62,17 @@ export type PortfolioReportHistoryRow = {
   forecast_headline: string | null;
 };
 
+export type PortfolioOpenRiskRow = {
+  risk_id: string;
+  project_id: string;
+  project_name: string;
+  title: string;
+  severity: string;
+  status: string;
+  report_run_id: string | null;
+  created_at: string;
+};
+
 export type ProjectHistoryEvent = {
   type: string;
   project_id: string;
@@ -90,28 +96,24 @@ function buildQuery(params: Record<string, string | number | undefined | null>):
   return q ? `?${q}` : "";
 }
 
-export async function fetchPortfolioDashboard(): Promise<PortfolioDashboard> {
-  const res = await apiFetch("/portfolio/dashboard");
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<PortfolioDashboard>(res);
-}
-
 export async function fetchPortfolioComparison(): Promise<PortfolioComparison> {
   const res = await apiFetch("/portfolio/comparison");
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<PortfolioComparison>(res);
+  return readJsonOk<PortfolioComparison>(res);
 }
 
 export async function fetchPortfolioSummary(): Promise<PortfolioSummary> {
   const res = await apiFetch("/portfolio/summary");
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<PortfolioSummary>(res);
+  return readJsonOk<PortfolioSummary>(res);
+}
+
+export async function fetchPortfolioOpenRisks(limit = 40): Promise<PortfolioOpenRiskRow[]> {
+  const res = await apiFetch(`/portfolio/open-risks${buildQuery({ limit })}`);
+  return readJsonOk<PortfolioOpenRiskRow[]>(res);
 }
 
 export async function fetchPortfolioRiskHeatmap(): Promise<RiskHeatmapResponse> {
   const res = await apiFetch("/portfolio/risk-heatmap");
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<RiskHeatmapResponse>(res);
+  return readJsonOk<RiskHeatmapResponse>(res);
 }
 
 export async function fetchPortfolioReportHistory(
@@ -119,12 +121,10 @@ export async function fetchPortfolioReportHistory(
   projectId?: string,
 ): Promise<PortfolioReportHistoryRow[]> {
   const res = await apiFetch(`/portfolio/report-history${buildQuery({ limit, project_id: projectId })}`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<PortfolioReportHistoryRow[]>(res);
+  return readJsonOk<PortfolioReportHistoryRow[]>(res);
 }
 
 export async function fetchProjectHistory(projectId: string, limit = 120): Promise<ProjectHistoryResponse> {
   const res = await apiFetch(`/projects/${projectId}/history${buildQuery({ limit })}`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<ProjectHistoryResponse>(res);
+  return readJsonOk<ProjectHistoryResponse>(res);
 }

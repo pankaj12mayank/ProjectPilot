@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { apiFetch, parseJson } from "../api/client";
+import { apiFetch, tryParseJson } from "../api/client";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { FormField } from "../components/ui/FormField";
@@ -31,17 +31,19 @@ export default function GovernanceReportPage() {
     setBusy(true);
     try {
       const res = await apiFetch(endpoint, { method: "POST", body });
-      const data = await parseJson<Record<string, unknown>>(res);
+      const text = await res.text();
       if (!res.ok) {
+        const parsed = tryParseJson<{ detail?: unknown }>(text);
         const detail =
-          typeof data.detail === "string"
-            ? data.detail
-            : Array.isArray(data.detail)
-              ? JSON.stringify(data.detail)
-              : res.statusText;
+          parsed && typeof parsed.detail === "string"
+            ? parsed.detail
+            : parsed && Array.isArray(parsed.detail)
+              ? JSON.stringify(parsed.detail)
+              : text.trim().slice(0, 400) || res.statusText;
         throw new Error(detail || "Request failed");
       }
-      setResult(data);
+      const data = tryParseJson<Record<string, unknown>>(text);
+      setResult(data ?? {});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {

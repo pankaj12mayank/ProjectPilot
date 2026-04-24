@@ -1,4 +1,6 @@
+/** API origin only (protocol + host + optional port). Never put `/api/v1` here — paths use API_PREFIX below. */
 const API_BASE = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+/** Must match backend `API_PREFIX` (see repo `.env.example`). */
 const API_PREFIX = "/api/v1";
 
 const ACCESS_KEY = "projectpilot_token";
@@ -115,8 +117,59 @@ export async function apiFetch(path: string, init: RequestInit = {}, isRetry = f
   return res;
 }
 
+export function isNetworkError(e: unknown): boolean {
+  return e instanceof TypeError && String((e as Error).message).toLowerCase().includes("fetch");
+}
+
+/** Safe JSON parse; returns null on empty or invalid JSON (no throw). */
+export function tryParseJson<T>(text: string): T | null {
+  const t = text.trim();
+  if (!t) return null;
+  try {
+    return JSON.parse(t) as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Build a user-facing message from an API error body (FastAPI `detail` or raw text). */
+export function formatApiErrorFromBody(status: number, text: string): string {
+  const parsed = tryParseJson<{ detail?: unknown }>(text);
+  if (parsed && parsed.detail !== undefined && parsed.detail !== null) {
+    const d = parsed.detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d)) {
+      const first = d[0];
+      if (first && typeof first === "object" && first !== null && "msg" in first) {
+        return String((first as { msg: string }).msg);
+      }
+      try {
+        return JSON.stringify(d);
+      } catch {
+        return `Request failed (${status})`;
+      }
+    }
+  }
+  const snippet = text.trim().slice(0, 280);
+  return snippet || `Request failed (${status})`;
+}
+
+/**
+ * Read response body once: throw Error with API message if !ok; otherwise parse JSON.
+ * Prefer this over `parseJson` when failure bodies may be non-JSON (proxies, HTML).
+ */
+export async function readJsonOk<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!res.ok) throw new Error(formatApiErrorFromBody(res.status, text));
+  const data = tryParseJson<T>(text);
+  if (data === null) throw new Error(text.trim() ? "Invalid JSON response" : "Empty response");
+  return data;
+}
+
 export async function parseJson<T>(res: Response): Promise<T> {
   const text = await res.text();
   if (!text) return {} as T;
-  return JSON.parse(text) as T;
+  const data = tryParseJson<T>(text);
+  if (data === null) throw new SyntaxError("Invalid JSON");
+  return data;
 }

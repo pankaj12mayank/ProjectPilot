@@ -49,22 +49,10 @@ export default function LoginPage() {
     }
   }
 
-  const title = (branding?.product_name || "ProjectPilot").trim() || "ProjectPilot";
-  const bg = branding?.asset_urls?.login_bg;
+  const title = (branding?.meta_title || "ProjectPilot").trim() || "ProjectPilot";
 
   return (
-    <div
-      className="pp-auth"
-      style={
-        bg
-          ? {
-              backgroundImage: `linear-gradient(rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.92)), url(${bg})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : undefined
-      }
-    >
+    <div className="pp-auth">
       <Card title={`Sign in to ${title}`}>
         <form className="pp-form" onSubmit={onSubmit} noValidate>
           {error ? (

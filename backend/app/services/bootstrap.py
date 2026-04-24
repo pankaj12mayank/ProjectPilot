@@ -36,6 +36,6 @@ def seed_bootstrap_admin(db: Session) -> None:
         email=email,
         password=password,
         full_name=name,
-        role="admin",
+        role="system_owner",
     )
     logger.info("Bootstrap admin created for %s (restart not required for other users).", email)

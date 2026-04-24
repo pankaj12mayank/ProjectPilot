@@ -8,8 +8,6 @@ import re
 import uuid
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import urlparse
-
 from sqlalchemy.orm import Session
 
 from app.config.settings import Settings, get_settings
@@ -23,20 +21,9 @@ ASSET_SLOTS: tuple[str, ...] = (
     "logo",
     "logo_dark",
     "favicon",
-    "favicon_dark",
-    "sidebar_logo",
-    "sidebar_logo_dark",
-    "login_illustration",
-    "login_illustration_dark",
-    "dashboard_banner",
-    "dashboard_banner_dark",
-    "report_cover",
-    "report_cover_dark",
-    "login_bg",
-    "login_bg_dark",
 )
 
-FAVICON_SLOTS = frozenset({"favicon", "favicon_dark"})
+FAVICON_SLOTS = frozenset({"favicon"})
 
 ALLOWED_EXT_COMMON = frozenset({"png", "jpg", "jpeg", "svg", "webp"})
 ALLOWED_EXT_FAVICON = frozenset({"ico", "png", "webp", "jpg", "jpeg"})
@@ -62,17 +49,6 @@ def _dumps_json(obj: Any) -> str:
         return json.dumps(obj, default=str)
     except (TypeError, ValueError):
         return "{}"
-
-
-def validate_optional_http_url(label: str, value: str | None) -> None:
-    if value is None:
-        return
-    v = value.strip()
-    if not v:
-        return
-    p = urlparse(v)
-    if p.scheme not in ("http", "https") or not p.netloc:
-        raise ValueError(f"{label} must be a valid http(s) URL with a host")
 
 
 def get_or_create(db: Session) -> BrandingSettings:
@@ -158,11 +134,6 @@ def _default_asset_url(settings: Settings, slot: str) -> str | None:
     return None
 
 
-def _normalize_sidebar_logo_filter(raw: str | None) -> str:
-    v = (raw or "auto").strip().lower()
-    return v if v in ("auto", "invert", "original") else "auto"
-
-
 _ACCENT_HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
@@ -201,25 +172,18 @@ def build_public_payload(
     if not isinstance(social, dict):
         social = {}
 
+    light = str(getattr(row, "accent_color_light", "") or "").strip()
+    dark = str(getattr(row, "accent_color_dark", "") or "").strip()
+    accent_color = light or dark
+
     return {
-        "product_name": row.product_name or "ProjectPilot",
-        "product_tagline": row.product_tagline or "",
-        "footer_text": row.footer_text or "",
-        "support_email": row.support_email or "",
-        "company_address": row.company_address or "",
         "social": {k: (str(v) if v is not None else None) for k, v in social.items()},
         "meta_title": row.meta_title or "",
         "meta_description": row.meta_description or "",
-        "default_domain_url": row.default_domain_url or "",
-        "company_website_url": row.company_website_url or "",
-        "public_api_url": row.public_api_url or "",
-        "public_app_url": row.public_app_url or "",
         "asset_version": int(row.asset_version or 1),
         "asset_urls": asset_urls,
         "files_base": files_base,
-        "sidebar_logo_filter": _normalize_sidebar_logo_filter(getattr(row, "sidebar_logo_filter", None)),
-        "accent_color_light": str(getattr(row, "accent_color_light", "") or "").strip(),
-        "accent_color_dark": str(getattr(row, "accent_color_dark", "") or "").strip(),
+        "accent_color": accent_color,
         "assets": {k: (str(v) if v else None) for k, v in assets.items() if k in ASSET_SLOTS},
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         "updated_by_user_id": row.updated_by_user_id,
@@ -362,44 +326,12 @@ def update_text_fields(
     row = get_or_create(db)
     detail_before: dict[str, Any] = {}
 
-    if body.product_name is not None:
-        detail_before["product_name"] = row.product_name
-        row.product_name = body.product_name
-    if body.product_tagline is not None:
-        detail_before["product_tagline"] = row.product_tagline
-        row.product_tagline = body.product_tagline
-    if body.footer_text is not None:
-        detail_before["footer_text"] = row.footer_text
-        row.footer_text = body.footer_text
-    if body.support_email is not None:
-        detail_before["support_email"] = row.support_email
-        row.support_email = body.support_email
-    if body.company_address is not None:
-        detail_before["company_address"] = row.company_address
-        row.company_address = body.company_address
     if body.meta_title is not None:
         detail_before["meta_title"] = row.meta_title
         row.meta_title = body.meta_title
     if body.meta_description is not None:
         detail_before["meta_description"] = row.meta_description
         row.meta_description = body.meta_description
-
-    for label, field_name in (
-        ("default_domain_url", "default_domain_url"),
-        ("company_website_url", "company_website_url"),
-        ("public_api_url", "public_api_url"),
-        ("public_app_url", "public_app_url"),
-    ):
-        if field_name not in raw:
-            continue
-        val = raw[field_name]
-        detail_before[field_name] = getattr(row, field_name)
-        if val is None or (isinstance(val, str) and not str(val).strip()):
-            setattr(row, field_name, "")
-        else:
-            vs = str(val).strip()
-            validate_optional_http_url(label, vs)
-            setattr(row, field_name, vs)
 
     if "social" in raw and isinstance(raw["social"], dict):
         merged = _loads_json(row.social_links_json, {})
@@ -414,24 +346,13 @@ def update_text_fields(
         detail_before["social"] = row.social_links_json
         row.social_links_json = _dumps_json(merged)
 
-    if body.sidebar_logo_filter is not None:
-        prev = getattr(row, "sidebar_logo_filter", "auto")
-        nv = _normalize_sidebar_logo_filter(str(body.sidebar_logo_filter))
-        if nv != prev:
-            detail_before["sidebar_logo_filter"] = prev
-            row.sidebar_logo_filter = nv
-
-    if body.accent_color_light is not None:
-        prev = str(getattr(row, "accent_color_light", "") or "")
-        nv = _normalize_accent_hex(body.accent_color_light)
-        if nv != prev:
-            detail_before["accent_color_light"] = prev
+    if body.accent_color is not None:
+        prev_l = str(getattr(row, "accent_color_light", "") or "")
+        prev_d = str(getattr(row, "accent_color_dark", "") or "")
+        nv = _normalize_accent_hex(body.accent_color)
+        if nv != prev_l or nv != prev_d:
+            detail_before["accent_color"] = {"light": prev_l, "dark": prev_d}
             row.accent_color_light = nv
-    if body.accent_color_dark is not None:
-        prev = str(getattr(row, "accent_color_dark", "") or "")
-        nv = _normalize_accent_hex(body.accent_color_dark)
-        if nv != prev:
-            detail_before["accent_color_dark"] = prev
             row.accent_color_dark = nv
 
     if not detail_before:

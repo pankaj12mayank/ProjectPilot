@@ -1,4 +1,4 @@
-import { apiFetch, parseJson } from "./client";
+import { apiFetch, readJsonOk } from "./client";
 
 export type MetricRef = { metric: string; value: unknown; source: string };
 
@@ -10,6 +10,8 @@ export type RecommendationItem = {
   metric_refs: MetricRef[];
   root_cause_ids: string[];
   risk_refs: Record<string, unknown>;
+  /** Present for deterministic rule-based suggestions (not LLM). */
+  engine?: string;
 };
 
 export type ProjectIntelligenceResponse = {
@@ -23,7 +25,7 @@ export type ProjectIntelligenceResponse = {
 };
 
 export async function fetchProjectIntelligence(projectId: string): Promise<ProjectIntelligenceResponse> {
-  const res = await apiFetch(`/projects/${projectId}/analytics/intelligence`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<ProjectIntelligenceResponse>(res);
+  const enc = encodeURIComponent(projectId);
+  const res = await apiFetch(`/projects/${enc}/analytics/intelligence`);
+  return readJsonOk<ProjectIntelligenceResponse>(res);
 }

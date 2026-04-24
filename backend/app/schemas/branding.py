@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
-
-SidebarLogoFilter = Literal["auto", "invert", "original"]
 
 
 class SocialLinksIn(BaseModel):
@@ -17,24 +15,13 @@ class SocialLinksIn(BaseModel):
 
 
 class BrandingPublicOut(BaseModel):
-    product_name: str
-    product_tagline: str
-    footer_text: str
-    support_email: str
-    company_address: str
-    social: dict[str, str | None]
     meta_title: str
     meta_description: str
-    default_domain_url: str
-    company_website_url: str
-    public_api_url: str
-    public_app_url: str
+    social: dict[str, str | None]
     asset_version: int
     asset_urls: dict[str, str | None]
     files_base: str
-    sidebar_logo_filter: SidebarLogoFilter = "auto"
-    accent_color_light: str = ""
-    accent_color_dark: str = ""
+    accent_color: str = ""
 
 
 class BrandingAdminOut(BrandingPublicOut):
@@ -51,34 +38,12 @@ def _empty_str_to_none(v: Any) -> Any:
 
 
 class BrandingUpdateIn(BaseModel):
-    product_name: str | None = Field(default=None, min_length=1, max_length=200)
-    product_tagline: str | None = Field(default=None, max_length=500)
-    footer_text: str | None = Field(default=None, max_length=500)
-    support_email: str | None = Field(default=None, max_length=255)
-    company_address: str | None = Field(default=None, max_length=4000)
-    social: SocialLinksIn | None = None
     meta_title: str | None = Field(default=None, max_length=200)
     meta_description: str | None = Field(default=None, max_length=500)
-    default_domain_url: str | None = Field(default=None, max_length=512)
-    company_website_url: str | None = Field(default=None, max_length=512)
-    public_api_url: str | None = Field(default=None, max_length=512)
-    public_app_url: str | None = Field(default=None, max_length=512)
-    sidebar_logo_filter: SidebarLogoFilter | None = None
-    accent_color_light: str | None = Field(default=None, max_length=16)
-    accent_color_dark: str | None = Field(default=None, max_length=16)
+    social: SocialLinksIn | None = None
+    accent_color: str | None = Field(default=None, max_length=16)
 
-    @field_validator(
-        "default_domain_url",
-        "company_website_url",
-        "public_api_url",
-        "public_app_url",
-        mode="before",
-    )
-    @classmethod
-    def blank_url_to_none(cls, v: Any) -> Any:
-        return _empty_str_to_none(v)
-
-    @field_validator("accent_color_light", "accent_color_dark", mode="before")
+    @field_validator("accent_color", mode="before")
     @classmethod
     def accent_hex_optional(cls, v: Any) -> str | None:
         if v is None:

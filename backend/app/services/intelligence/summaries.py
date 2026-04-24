@@ -5,6 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 
+def _registered_risk_lines(health: dict[str, Any]) -> list[str]:
+    reg = health.get("registered_risks") or []
+    if not reg:
+        return ["- None recorded in the risk register for this project."]
+    lines: list[str] = []
+    for r in reg[:25]:
+        rid = r.get("report_run_id")
+        link = f" (linked report job: `{rid}`)" if rid else ""
+        lines.append(
+            f"- **{r.get('title', '—')}** — severity **{r.get('severity', '—')}**, status **{r.get('status', '—')}**{link}",
+        )
+    return lines
+
+
 def executive_summary(
     project_name: str,
     health: dict[str, Any],
@@ -27,6 +41,8 @@ def executive_summary(
     ]
     for c in root_causes[:5]:
         lines.append(f"- **{c.get('category')}:** {c.get('statement')}")
+    lines.extend(["", "## Registered project risks (manual)"])
+    lines.extend(_registered_risk_lines(health))
     lines.extend(["", "## Top actions"])
     for r in recommendations[:5]:
         lines.append(f"- **P{r.get('priority')} — {r.get('title')}:** {r.get('detail')}")
@@ -69,6 +85,9 @@ def pm_detailed_report(
         "",
         "## RAID summary",
         f"- Items: {risk.get('total_items')} | Open high-severity: {risk.get('high_severity_open_count', risk.get('risk_score'))}",
+        "",
+        "## Registered project risks (manual register)",
+        *_registered_risk_lines(health),
         "",
         "## Milestones",
         f"- Behind / on-track / ahead: {ms.get('late_count')} / {ms.get('on_track_count')} / {ms.get('ahead_count')}",
@@ -123,8 +142,10 @@ def client_report(
         f"**Overall indicator:** {rag}",
         f"**Progress snapshot:** completion metrics are at approximately **{comp_s}** where data is available.",
         "",
-        "## What we are doing next",
+        "## Registered risks (summary)",
     ]
+    lines.extend(_registered_risk_lines(health))
+    lines.extend(["", "## What we are doing next"])
     for r in recommendations[:4]:
         lines.append(f"- {r.get('title')}: {r.get('detail')}")
     lines.extend(

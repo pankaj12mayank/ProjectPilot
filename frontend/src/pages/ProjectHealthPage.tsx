@@ -16,7 +16,9 @@ import {
   YAxis,
 } from "recharts";
 import { fetchProjectHealth, type ProjectHealthResponse } from "../api/analytics";
-import { recordProjectMetricsSnapshot } from "../api/projects";
+import { fetchProjectMetricsSnapshots, recordProjectMetricsSnapshot, type MetricsSnapshotListItem } from "../api/projects";
+import { useToast } from "../components/ToastProvider";
+import { friendlyErrorMessage } from "@/lib/friendlyMessages";
 import { KpiCard } from "../components/KpiCard";
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/PageLoader";
@@ -78,13 +80,23 @@ function RagBanner({ rag }: { rag: ProjectHealthResponse["rag"] }) {
   );
 }
 
+function sourceLabel(source: string): string {
+  if (source === "manual_refresh") return "Manual";
+  if (source === "report_package") return "Report run";
+  return source;
+}
+
 export default function ProjectHealthPage() {
+  const toast = useToast();
   const { projectId } = useParams<{ projectId: string }>();
   const [data, setData] = useState<ProjectHealthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [snapshotMsg, setSnapshotMsg] = useState<string | null>(null);
   const [snapshotBusy, setSnapshotBusy] = useState(false);
+  const [snapshots, setSnapshots] = useState<MetricsSnapshotListItem[] | null>(null);
+  const [snapshotsError, setSnapshotsError] = useState<string | null>(null);
+  const [snapshotListNonce, setSnapshotListNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +114,27 @@ export default function ProjectHealthPage() {
       cancelled = true;
     };
   }, [projectId, refreshKey]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    setSnapshotsError(null);
+    (async () => {
+      try {
+        const rows = await fetchProjectMetricsSnapshots(projectId, 40);
+        if (!cancelled) setSnapshots(rows);
+      } catch (e) {
+        if (!cancelled) {
+          const msg = friendlyErrorMessage(e, "Could not load snapshot history.");
+          setSnapshotsError(msg);
+          setSnapshots([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, refreshKey, snapshotListNonce]);
 
   const weeklyData = useMemo(() => {
     if (!data?.charts.weekly_completion?.length) return [];
@@ -148,9 +181,14 @@ export default function ProjectHealthPage() {
     setSnapshotBusy(true);
     try {
       const r = await recordProjectMetricsSnapshot(projectId);
-      setSnapshotMsg(`Snapshot saved (${r.snapshot_id.slice(0, 8)}…). Portfolio charts will include this point.`);
+      const msg = `Snapshot saved (${r.snapshot_id.slice(0, 8)}…). Stored under outputs/snapshots/${projectId}/ on the server.`;
+      setSnapshotMsg(msg);
+      toast.push("success", "Metrics snapshot saved. It appears in the history below.");
+      setSnapshotListNonce((n) => n + 1);
     } catch (e) {
-      setSnapshotMsg(e instanceof Error ? e.message : "Snapshot failed");
+      const msg = friendlyErrorMessage(e, "Snapshot could not be saved.");
+      setSnapshotMsg(msg);
+      toast.push("error", msg);
     } finally {
       setSnapshotBusy(false);
     }
@@ -226,6 +264,56 @@ export default function ProjectHealthPage() {
         ) : null}
         <p className="pp-muted">All figures below are computed from validated rows stored after upload — nothing is manual.</p>
         <RagBanner rag={data.rag} />
+      </Card>
+
+      <Card title="Snapshot history">
+        <p className="pp-muted" style={{ marginTop: 0 }}>
+          Each row is a metrics capture for this project (timestamp + source). Files are mirrored under{" "}
+          <code>outputs/snapshots/&lt;project_id&gt;/</code> on the API server.
+        </p>
+        {snapshotsError ? (
+          <p className="pp-field__error" role="alert">
+            {snapshotsError}
+          </p>
+        ) : null}
+        {snapshots === null ? (
+          <p className="pp-muted">Loading history…</p>
+        ) : snapshots.length === 0 ? (
+          <p className="pp-muted">No snapshots yet. Use &quot;Record portfolio snapshot&quot; above after you have ingested data.</p>
+        ) : (
+          <div className="pp-table-wrap" style={{ marginTop: "0.75rem" }}>
+            <table className="pp-table">
+              <thead>
+                <tr>
+                  <th>Time (UTC)</th>
+                  <th>Source</th>
+                  <th>Report job</th>
+                  <th>Snapshot id</th>
+                </tr>
+              </thead>
+              <tbody>
+                {snapshots.map((s) => (
+                  <tr key={s.snapshot_id}>
+                    <td>{new Date(s.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</td>
+                    <td>{sourceLabel(s.source)}</td>
+                    <td>
+                      {s.report_run_id ? (
+                        <Link to={`/dashboard/projects/${projectId}/reports?jobId=${encodeURIComponent(s.report_run_id)}`}>
+                          <code>{s.report_run_id.slice(0, 8)}…</code>
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>
+                      <code>{s.snapshot_id.slice(0, 8)}…</code>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       <Card title="Key performance indicators">

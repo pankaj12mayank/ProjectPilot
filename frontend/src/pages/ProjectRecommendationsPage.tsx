@@ -60,6 +60,9 @@ export default function ProjectRecommendationsPage() {
             <Link to={`/dashboard/projects/${projectId}/reports`} className="pp-btn pp-btn--secondary pp-btn--sm">
               Reports
             </Link>
+            <Link to={`/dashboard/projects/${projectId}/risks`} className="pp-btn pp-btn--secondary pp-btn--sm">
+              Risks
+            </Link>
           </div>
         }
       >
@@ -69,7 +72,8 @@ export default function ProjectRecommendationsPage() {
           </p>
         ) : (
           <p className="pp-muted">
-            Each action lists <strong>metric_refs</strong> (values from your KPIs, EVM, RAID, or forecast) and links to{" "}
+            Items tagged <strong>Rule-based</strong> use fixed thresholds (registered high risks, SPI/CPI below 1.0) — no
+            AI. Other rows come from the standard intelligence pipeline. Each action lists <strong>metric_refs</strong> and{" "}
             <strong>root_cause_ids</strong> where applicable.
           </p>
         )}
@@ -83,6 +87,11 @@ export default function ProjectRecommendationsPage() {
                 <div className="pp-rec-card__head">
                   <span className="pp-rec-priority">P{r.priority}</span>
                   <strong>{r.title}</strong>
+                  {r.engine === "rules" ? (
+                    <span className="pp-pill pp-pill--muted" style={{ marginLeft: "0.35rem", fontSize: "0.65rem" }}>
+                      Rule-based
+                    </span>
+                  ) : null}
                 </div>
                 <p className="pp-muted">{r.detail}</p>
                 <p className="pp-rec-owner">

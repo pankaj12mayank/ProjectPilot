@@ -36,7 +36,7 @@ export default function SettingsPage() {
       {showBrandingLink ? (
         <Card title="Branding">
           <p className="pp-muted">
-            Logos, favicons, theme accents, and platform copy are managed on the dedicated branding page.
+            Logo (light and dark), favicon, SEO fields, social links, and theme accent are managed on the branding page.
           </p>
           <p style={{ marginTop: "0.75rem" }}>
             <Link to="/admin/branding" className="pp-btn pp-btn--secondary pp-btn--sm">

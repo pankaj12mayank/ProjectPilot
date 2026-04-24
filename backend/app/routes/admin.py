@@ -21,8 +21,8 @@ def _client_ip(request: Request) -> str | None:
 
 
 @router.get("/stats")
-def admin_stats(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict[str, int]:
-    return admin_service.admin_dashboard_counts(db)
+def admin_stats(admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict[str, object]:
+    return admin_service.admin_dashboard_stats(db, admin)
 
 
 @router.get("/branding", response_model=BrandingAdminOut)

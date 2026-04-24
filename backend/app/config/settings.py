@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     public_api_url: str | None = Field(default=None, validation_alias="PUBLIC_API_URL")
     public_app_url: str | None = Field(default=None, validation_alias="PUBLIC_APP_URL")
     branding_max_upload_mb: int = Field(default=5, ge=1, le=100, validation_alias="BRANDING_MAX_UPLOAD_MB")
+    project_upload_max_mb: int = Field(default=30, ge=1, le=200, validation_alias="PROJECT_UPLOAD_MAX_MB")
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -120,6 +121,10 @@ class Settings(BaseSettings):
     @property
     def branding_max_upload_bytes(self) -> int:
         return int(self.branding_max_upload_mb) * 1024 * 1024
+
+    @property
+    def project_upload_max_bytes(self) -> int:
+        return int(self.project_upload_max_mb) * 1024 * 1024
 
     def rag_thresholds(self) -> dict[str, float | int]:
         return {

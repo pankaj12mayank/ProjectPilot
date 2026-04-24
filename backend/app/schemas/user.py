@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
@@ -5,25 +6,24 @@ from pydantic import BaseModel, EmailStr, Field
 THEME_PREFERENCE = Literal["light", "dark", "system"]
 
 USER_ROLE = Literal[
-    "super_admin",
     "admin",
     "pmo",
     "project_manager",
-    "delivery_manager",
     "client",
-    "viewer",
-    "manager",
     "member",
+    "viewer",
 ]
 
 
 class UserOut(BaseModel):
     id: str
-    email: EmailStr
+    # Plain str: DB may hold dev addresses (e.g. admin@localhost) that EmailStr rejects on read.
+    email: str
     full_name: str
     role: str
     is_active: bool
     theme_preference: THEME_PREFERENCE | None = None
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from collections import Counter
 from typing import Any
@@ -10,15 +11,18 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.constants.roles import ADMIN, MANAGER, SUPER_ADMIN
+from app.config.settings import Settings
+from app.constants.roles import ROLES_WITH_ALL_PROJECTS_READ
 from app.db.models import Project, ProjectMetricsSnapshot, ProjectReportRun, User
 from app.services import project_service
+
+logger = logging.getLogger(__name__)
 
 _SNAPSHOT_LIMIT = 24
 
 
 def _projects_scope(db: Session, viewer: User) -> list[Project]:
-    if viewer.role in (SUPER_ADMIN, ADMIN, MANAGER):
+    if viewer.role in ROLES_WITH_ALL_PROJECTS_READ:
         return list(db.scalars(select(Project).order_by(Project.updated_at.desc())).all())
     return project_service.list_projects_for_user(db, viewer)
 
@@ -160,8 +164,29 @@ def build_portfolio_report_history(
     return out
 
 
-def record_manual_snapshot(db: Session, project_id: str, health: dict[str, Any]) -> dict[str, Any]:
+def list_project_metrics_snapshots(db: Session, project_id: str, *, limit: int = 50) -> list[ProjectMetricsSnapshot]:
+    lim = max(1, min(limit, 200))
+    return list(
+        db.scalars(
+            select(ProjectMetricsSnapshot)
+            .where(ProjectMetricsSnapshot.project_id == project_id)
+            .order_by(ProjectMetricsSnapshot.created_at.desc())
+            .limit(lim),
+        ).all(),
+    )
+
+
+def record_manual_snapshot(
+    db: Session,
+    project_id: str,
+    health: dict[str, Any],
+    settings: Settings | None = None,
+) -> dict[str, Any]:
+    from app.config.settings import get_settings
     from app.services.metrics_snapshot import snapshot_metrics_json
+    from app.services.snapshot_storage import write_metrics_snapshot_file
+
+    settings = settings or get_settings()
 
     row = ProjectMetricsSnapshot(
         id=str(uuid.uuid4()),
@@ -173,6 +198,10 @@ def record_manual_snapshot(db: Session, project_id: str, health: dict[str, Any])
     db.add(row)
     db.commit()
     db.refresh(row)
+    try:
+        write_metrics_snapshot_file(settings, row)
+    except Exception:
+        logger.exception("Disk snapshot write failed project_id=%s snapshot_id=%s", project_id, row.id)
     return {"snapshot_id": row.id, "created_at": row.created_at.isoformat()}
 
 

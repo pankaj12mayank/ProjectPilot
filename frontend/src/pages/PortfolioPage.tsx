@@ -114,7 +114,8 @@ export default function PortfolioPage() {
         }
       >
         <p className="pp-muted">
-          Admin and manager see all projects; members see their own. History and files stay tied to each{" "}
+          Admin, PMO, and project managers see all projects; other roles see their own. History and files stay tied to
+          each{" "}
           <code>project_id</code>.
         </p>
         {error ? <p className="pp-field__error">{error}</p> : null}

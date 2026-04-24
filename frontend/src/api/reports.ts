@@ -1,4 +1,4 @@
-import { apiFetch, parseJson } from "./client";
+import { apiFetch, readJsonOk } from "./client";
 
 export type ProjectReportPackageResponse = {
   job_id: string;
@@ -33,15 +33,15 @@ export const REPORT_ARTIFACTS: { filename: string; label: string }[] = [
 ];
 
 export async function generateProjectReports(projectId: string): Promise<ProjectReportPackageResponse> {
-  const res = await apiFetch(`/projects/${projectId}/reports/generate`, { method: "POST" });
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<ProjectReportPackageResponse>(res);
+  const enc = encodeURIComponent(projectId);
+  const res = await apiFetch(`/projects/${enc}/reports/generate`, { method: "POST" });
+  return readJsonOk<ProjectReportPackageResponse>(res);
 }
 
 export async function fetchReportHistory(projectId: string): Promise<ReportRunSummary[]> {
-  const res = await apiFetch(`/projects/${projectId}/reports/history`);
-  if (!res.ok) throw new Error(await res.text());
-  return parseJson<ReportRunSummary[]>(res);
+  const enc = encodeURIComponent(projectId);
+  const res = await apiFetch(`/projects/${enc}/reports/history`);
+  return readJsonOk<ReportRunSummary[]>(res);
 }
 
 export async function downloadReportArtifact(
