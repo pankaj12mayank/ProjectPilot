@@ -1,53 +1,47 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-REM ProjectPilot: installs backend (incl. reportlab, python-docx, python-pptx) + frontend, then starts API + Vite via tools\dev_server.py
+REM ProjectPilot: ensure .env then start API + UI via Docker Compose (one command).
 
 if not exist ".env" (
     if exist ".env.example" (
-        echo [ProjectPilot] .env not found — copying .env.example to .env
+        echo [ProjectPilot] .env not found - copying .env.example to .env
         copy /Y ".env.example" ".env" >nul
-        echo [ProjectPilot] Edit .env for production ^(JWT_SECRET_KEY, ADMIN_*^). Continuing startup...
+        echo [ProjectPilot] Edit .env for production: JWT_SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD. Continuing...
     ) else (
-        echo [ProjectPilot] ERROR: .env.example missing — cannot bootstrap .env
+        echo [ProjectPilot] ERROR: .env.example missing - cannot bootstrap .env
         pause
         exit /b 1
     )
 )
 
-echo [ProjectPilot] Updating backend ^(pip^)...
-python -m pip install -q --upgrade pip
-python -m pip install -r "backend\requirements.txt"
+where docker >nul 2>&1
 if errorlevel 1 (
-    echo pip failed.
+    echo [ProjectPilot] Docker not found on PATH. Install Docker Desktop, then try again.
+    echo Without Docker, use manual start - see README section 4 (Uvicorn + Vite^).
     pause
     exit /b 1
 )
 
-echo [ProjectPilot] Updating frontend ^(npm^)...
-pushd "frontend"
-call npm install
+docker info >nul 2>&1
 if errorlevel 1 (
-    echo npm failed.
-    popd
+    echo [ProjectPilot] Docker is installed, but the engine is not running.
+    echo   Open Docker Desktop and wait until the engine is running, then run this again.
+    echo   Or see README section 4 to run the API and UI without Docker.
+    echo.
     pause
     exit /b 1
 )
-popd
 
-if not exist "frontend\.env" (
-    if exist "frontend\.env.example" (
-        copy /Y "frontend\.env.example" "frontend\.env" >nul
-        echo [ProjectPilot] Created frontend\.env from frontend\.env.example
-    )
-)
-
-echo [ProjectPilot] Starting API + UI ^(python tools\dev_server.py^)...
-echo   Docs http://127.0.0.1:8000/docs  -  UI http://127.0.0.1:5173
-python tools\dev_server.py
+echo [ProjectPilot] Starting with Docker Compose...
+echo   Docs: http://127.0.0.1:8000/docs
+echo   UI:   http://127.0.0.1:5173
+echo   Press Ctrl+C to stop.
+echo.
+docker compose up --build
 set "EC=%ERRORLEVEL%"
 if not "%EC%"=="0" (
-    echo dev_server exited with code %EC%.
+    echo docker compose exited with code %EC%.
     pause
 )
 exit /b %EC%

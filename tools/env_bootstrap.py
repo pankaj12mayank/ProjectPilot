@@ -1,8 +1,7 @@
 """
 One-time env file creation for fresh clones (no secrets invented — copies tracked examples).
 
-Used by tools/dev_server.py. When running `python tools/dev_server.py`, this module lives
-next to dev_server.py on sys.path, so it is imported as `env_bootstrap`.
+Can be imported by optional tooling; run.bat / run.sh copy .env without this module.
 """
 
 from __future__ import annotations

@@ -142,8 +142,8 @@ def run_cli_setup() -> int:
     print("", flush=True)
     print("Done. Next steps:", flush=True)
     print("  1. Edit .env (JWT_SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, CORS_ORIGINS, DATABASE_URL if needed)")
-    print(r"  2. Start API + UI:  .\.venv\Scripts\python.exe tools\dev_server.py")
-    print(r"     Or double-click run.bat (uses your PATH Python; installs deps then runs dev_server).")
+    print("  2. Start the stack: install Docker Desktop, then:  docker compose up --build")
+    print(r"     Or double-click run.bat. Without Docker, see SETUP_NOTES / README (manual Uvicorn + Vite).")
     print("  3. Sign in with the admin from .env; add users under Admin → Users.")
     input("\nPress Enter to close…")
     return 0

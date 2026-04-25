@@ -16,25 +16,26 @@ What this is NOT
 
 After setup — how to run the app
 ---------------------------------
-• From the repo folder: double-click run.bat, or run:  .\.venv\Scripts\python.exe tools\dev_server.py
-• That starts the API (port 8000) and the Vite dev UI (port 5173). See README.md for URLs and .env details.
+• Recommended: install Docker Desktop, start it until the engine is running, then double-click run.bat
+  (or from this folder: docker compose up --build). That runs the API on port 8000 and the UI on 5173.
+• Without Docker: use README section 4 (Path B, manual) — Uvicorn in backend\ and npm run dev in frontend\.
 
 After you update the folder (git pull / copy new files)
---------------------------------------------------------
-• Optional check:  python tools\verify_setup.py
-• Then start again with run.bat or tools\dev_server.py as above.
+-------------------------------------------------------
+• Optional: python tools\verify_setup.py
+• Start again: run.bat (with Docker) or the manual two-terminal flow.
 
 Network and other failures
 ----------------------------
-• pip and npm need internet access to their registries. If something fails, it is not always an “internet error”.
+• pip and npm need internet access to their registries. If something fails, it is not always an "internet error".
 • Disk space, folder permissions, antivirus blocking, corporate proxy, or corrupted caches can all cause failures.
 • Read the red error text in the setup window and fix the reported issue (PATH, permissions, etc.).
 
-Security and who is “admin”
+Security and who is "admin"
 ----------------------------
 • After install, edit .env: set JWT_SECRET_KEY and ADMIN_EMAIL / ADMIN_PASSWORD for the first login on THIS machine.
 • Each deployment / customer environment should use its own secrets and its own Admin → Users list.
-• The product does not lock “system owner” to one person by license; access is controlled by your .env and user accounts you create.
+• The product does not lock "system owner" to one person by license; access is controlled by your .env and user accounts you create.
 
 Support files
 -------------

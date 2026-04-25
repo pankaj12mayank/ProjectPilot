@@ -22,7 +22,7 @@ def main() -> int:
         "backend/requirements.txt",
         "backend/app/main.py",
         "frontend/package.json",
-        "tools/dev_server.py",
+        "docker-compose.yml",
         ".env.example",
         "frontend/.env.example",
     ]
