@@ -85,8 +85,12 @@ export type ProjectHealthResponse = {
   };
 };
 
-export async function fetchProjectHealth(projectId: string): Promise<ProjectHealthResponse> {
+export async function fetchProjectHealth(projectId: string, cacheBust?: string | number): Promise<ProjectHealthResponse> {
   const enc = encodeURIComponent(projectId);
-  const res = await apiFetch(`/projects/${enc}/analytics/health`);
+  const q =
+    cacheBust !== undefined && cacheBust !== ""
+      ? `?_=${encodeURIComponent(String(cacheBust))}`
+      : "";
+  const res = await apiFetch(`/projects/${enc}/analytics/health${q}`);
   return readJsonOk<ProjectHealthResponse>(res);
 }

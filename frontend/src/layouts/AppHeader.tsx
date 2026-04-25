@@ -20,6 +20,7 @@ import {
 } from "@/components/shadcn/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { publicAvatarUrl } from "@/api/userProfile";
+import { ThemeToggle } from "@/theme";
 
 function titleCase(s: string) {
   if (!s) return "";
@@ -103,6 +104,7 @@ export function AppHeader({ onMenu }: { onMenu: () => void }) {
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+        <ThemeToggle variant="icon" className="shrink-0 rounded-xl border-border/80" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className={cn("gap-2 rounded-xl border-border/80", "shrink-0")}>

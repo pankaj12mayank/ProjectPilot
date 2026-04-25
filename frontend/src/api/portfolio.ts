@@ -96,13 +96,18 @@ function buildQuery(params: Record<string, string | number | undefined | null>):
   return q ? `?${q}` : "";
 }
 
-export async function fetchPortfolioComparison(): Promise<PortfolioComparison> {
-  const res = await apiFetch("/portfolio/comparison");
+function cacheBustQuery(cacheBust?: string | number): string {
+  if (cacheBust === undefined || cacheBust === "") return "";
+  return `?_=${encodeURIComponent(String(cacheBust))}`;
+}
+
+export async function fetchPortfolioComparison(cacheBust?: string | number): Promise<PortfolioComparison> {
+  const res = await apiFetch(`/portfolio/comparison${cacheBustQuery(cacheBust)}`);
   return readJsonOk<PortfolioComparison>(res);
 }
 
-export async function fetchPortfolioSummary(): Promise<PortfolioSummary> {
-  const res = await apiFetch("/portfolio/summary");
+export async function fetchPortfolioSummary(cacheBust?: string | number): Promise<PortfolioSummary> {
+  const res = await apiFetch(`/portfolio/summary${cacheBustQuery(cacheBust)}`);
   return readJsonOk<PortfolioSummary>(res);
 }
 
@@ -111,8 +116,8 @@ export async function fetchPortfolioOpenRisks(limit = 40): Promise<PortfolioOpen
   return readJsonOk<PortfolioOpenRiskRow[]>(res);
 }
 
-export async function fetchPortfolioRiskHeatmap(): Promise<RiskHeatmapResponse> {
-  const res = await apiFetch("/portfolio/risk-heatmap");
+export async function fetchPortfolioRiskHeatmap(cacheBust?: string | number): Promise<RiskHeatmapResponse> {
+  const res = await apiFetch(`/portfolio/risk-heatmap${cacheBustQuery(cacheBust)}`);
   return readJsonOk<RiskHeatmapResponse>(res);
 }
 

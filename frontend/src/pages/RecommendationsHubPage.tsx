@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function RecommendationsHubPage() {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recommendations</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
@@ -25,11 +25,12 @@ export default function RecommendationsHubPage() {
             actions where data exists.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="w-full max-w-none space-y-6">
           <ProjectQuickPick
             destination="recommendations"
             title="Pick a project"
             description="Lists every project in your workspace that you may open."
+            layout="full"
           />
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild className="rounded-xl">

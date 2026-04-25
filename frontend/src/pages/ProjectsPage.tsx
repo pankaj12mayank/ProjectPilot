@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { deleteProject, fetchProjects, type ProjectOut } from "../api/projects";
 import { useAuth } from "../auth/AuthContext";
@@ -27,6 +27,9 @@ export default function ProjectsPage() {
   const [items, setItems] = useState<ProjectOut[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setError(null);
@@ -44,6 +47,24 @@ export default function ProjectsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterText]);
+
+  const filtered = useMemo(() => {
+    if (!items) return [];
+    const q = filterText.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((p) => p.name.toLowerCase().includes(q));
+  }, [items, filterText]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pageSlice = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, safePage]);
 
   async function handleDelete(p: ProjectOut) {
     if (!canDeleteProject(user, p)) return;
@@ -79,7 +100,7 @@ export default function ProjectsPage() {
   if (items === null) return <PageLoader />;
 
   return (
-    <div className="pp-grid pp-grid--1">
+    <div className="pp-grid pp-grid--1 mx-auto w-full max-w-[1600px]">
       <Card
         title="Projects"
         actions={
@@ -96,19 +117,38 @@ export default function ProjectsPage() {
         {items.length === 0 ? (
           <p className="pp-muted">No projects yet. Create one to upload status, RAID, and weekly history files.</p>
         ) : (
-          <div className="pp-table-wrap">
-            <table className="pp-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Status</th>
-                  <th>Data</th>
-                  <th>Updated</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((p) => {
+          <>
+            <div className="pp-form" style={{ marginBottom: "1rem", maxWidth: "none" }}>
+              <label className="pp-muted" htmlFor="projects-filter">
+                Search by name
+              </label>
+              <input
+                id="projects-filter"
+                className="pp-input"
+                style={{ marginTop: "0.35rem", maxWidth: "none", width: "100%" }}
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                placeholder="Type to filter the list"
+                autoComplete="off"
+              />
+            </div>
+            {filtered.length === 0 ? (
+              <p className="pp-muted">No projects match this search.</p>
+            ) : (
+              <>
+                <div className="pp-table-wrap">
+                  <table className="pp-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Updated</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageSlice.map((p) => {
                   const assignTeam = needsTeamAssignment(p);
                   const showDelete = canDeleteProject(user, p);
                   return (
@@ -182,10 +222,48 @@ export default function ProjectsPage() {
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  className="pp-row-actions"
+                  style={{
+                    marginTop: "1rem",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <p className="pp-muted" style={{ margin: 0, fontSize: "0.875rem" }}>
+                    Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length}
+                    {filterText.trim() ? ` (of ${items.length} total)` : ""}
+                  </p>
+                  <span className="pp-row-actions">
+                    <button
+                      type="button"
+                      className="pp-btn pp-btn--secondary pp-btn--sm"
+                      disabled={safePage <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </button>
+                    <span className="pp-muted" style={{ fontSize: "0.85rem", alignSelf: "center" }}>
+                      Page {safePage} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="pp-btn pp-btn--secondary pp-btn--sm"
+                      disabled={safePage >= totalPages}
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Next
+                    </button>
+                  </span>
+                </div>
+              </>
+            )}
+          </>
         )}
       </Card>
     </div>

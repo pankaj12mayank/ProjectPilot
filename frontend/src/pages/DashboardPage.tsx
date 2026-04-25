@@ -155,7 +155,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-10">
+    <div className="mx-auto w-full max-w-[1600px] space-y-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="pp-type-dashboard-title text-foreground">Dashboard</h1>
@@ -206,8 +206,8 @@ export default function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-border/80">
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="w-full border-border/80">
           <CardHeader className="pb-2">
             <CardDescription>Active projects</CardDescription>
             <CardTitle className="pp-type-kpi-value text-3xl tabular-nums text-foreground">{active}</CardTitle>
@@ -216,7 +216,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Non-archived projects in workspace.</p>
           </CardContent>
         </Card>
-        <Card className="border-border/80">
+        <Card className="w-full border-border/80">
           <CardHeader className="pb-2">
             <CardDescription>RAG summary</CardDescription>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -233,7 +233,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
         </Card>
-        <Card className="border-border/80">
+        <Card className="w-full border-border/80">
           <CardHeader className="pb-2">
             <CardDescription>Schedule pressure</CardDescription>
             <CardTitle className="pp-type-kpi-value text-3xl tabular-nums text-rag-amber">{delayed}</CardTitle>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">Projects with SPI below 1.0 (latest snapshot).</p>
           </CardContent>
         </Card>
-        <Card className="border-border/80">
+        <Card className="w-full border-border/80">
           <CardHeader className="pb-2">
             <CardDescription>Budget risk</CardDescription>
             <CardTitle className="pp-type-kpi-value text-3xl tabular-nums text-rag-red">{budgetRisk}</CardTitle>
@@ -253,8 +253,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <Card className="border-border/80 lg:col-span-2">
+      <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-3">
+        <Card className="w-full border-border/80 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">SPI / CPI trend</CardTitle>
             <CardDescription>Portfolio-average indices across recent snapshots.</CardDescription>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/80">
+        <Card className="w-full border-border/80">
           <CardHeader>
             <CardTitle className="text-base">RAG distribution</CardTitle>
             <CardDescription>Share of latest portfolio RAG states.</CardDescription>
@@ -318,8 +318,8 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Card className="border-border/80">
+      <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2">
+        <Card className="w-full border-border/80">
           <CardHeader>
             <CardTitle className="text-base">Milestone progress</CardTitle>
             <CardDescription>Average reported completion across projects with snapshots.</CardDescription>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/80">
+        <Card className="w-full border-border/80">
           <CardHeader>
             <CardTitle className="text-base">High-severity risks</CardTitle>
             <CardDescription>Top projects by risk score from the latest portfolio summary.</CardDescription>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="border-border/80">
+      <Card className="w-full border-border/80">
         <CardHeader>
           <CardTitle className="text-base">Completion trend</CardTitle>
           <CardDescription>Average completion percentage across snapshots (portfolio level).</CardDescription>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/80">
+      <Card className="w-full border-border/80">
         <CardHeader>
           <CardTitle className="text-base">Open registered risks</CardTitle>
           <CardDescription>Project risks you created (not ingested RAID rows). High-severity items feed report mitigations.</CardDescription>

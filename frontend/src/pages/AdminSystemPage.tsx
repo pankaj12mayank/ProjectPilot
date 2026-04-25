@@ -26,7 +26,7 @@ export default function AdminSystemPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-6">
       <div>
         <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">System configuration</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
@@ -39,8 +39,8 @@ export default function AdminSystemPage() {
       {!cfg && !err ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
 
       {cfg ? (
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Card className="border-border/80 shadow-card lg:col-span-2">
+        <div className="grid w-full gap-5">
+          <Card className="border-border/80 shadow-card">
             <CardHeader>
               <CardTitle className="text-base">Runtime controls</CardTitle>
               <CardDescription>
@@ -93,60 +93,63 @@ export default function AdminSystemPage() {
               </Button>
             </CardContent>
           </Card>
-          <Card className="border-border/80 shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">API &amp; security</CardTitle>
-              <CardDescription>Routing and token policy.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="API prefix" value={cfg.api_prefix} />
-              <Row label="JWT algorithm" value={cfg.jwt_algorithm} />
-              <Row label="Access token TTL" value={`${cfg.jwt_access_expire_minutes} min`} />
-              <Row label="Refresh token TTL" value={`${cfg.jwt_refresh_expire_days} days`} />
-              <Row label="JWT secret" value={cfg.jwt_secret_configured ? "Configured" : "Weak / dev default"} />
-              <Row label="Dev reset token leak" value={cfg.dev_return_reset_token ? "ON (dev only)" : "Off"} />
-            </CardContent>
-          </Card>
 
-          <Card className="border-border/80 shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">HTTP &amp; data</CardTitle>
-              <CardDescription>CORS and storage.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="CORS origins" value={cfg.cors_origins} multiline />
-              <Row label="Database" value={cfg.database_kind} />
-              <Row label="Log level" value={cfg.log_level} />
-              <Row label="Chart export DPI" value={String(cfg.chart_dpi)} />
-            </CardContent>
-          </Card>
+          <div className="grid w-full gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-border/80 shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base">API &amp; security</CardTitle>
+                <CardDescription>Routing and token policy.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <Row label="API prefix" value={cfg.api_prefix} />
+                <Row label="JWT algorithm" value={cfg.jwt_algorithm} />
+                <Row label="Access token TTL" value={`${cfg.jwt_access_expire_minutes} min`} />
+                <Row label="Refresh token TTL" value={`${cfg.jwt_refresh_expire_days} days`} />
+                <Row label="JWT secret" value={cfg.jwt_secret_configured ? "Configured" : "Weak / dev default"} />
+                <Row label="Dev reset token leak" value={cfg.dev_return_reset_token ? "ON (dev only)" : "Off"} />
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/80 shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">Uploads &amp; RAG</CardTitle>
-              <CardDescription>Limits and health thresholds.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="Branding max upload" value={`${cfg.branding_max_upload_mb} MB`} />
-              <Row label="Project file max" value={`${cfg.project_upload_max_mb} MB`} />
-              <Row label="RAG thresholds" value={JSON.stringify(cfg.rag_thresholds)} />
-            </CardContent>
-          </Card>
+            <Card className="border-border/80 shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base">HTTP &amp; data</CardTitle>
+                <CardDescription>CORS and storage.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <Row label="CORS origins" value={cfg.cors_origins} multiline />
+                <Row label="Database" value={cfg.database_kind} />
+                <Row label="Log level" value={cfg.log_level} />
+                <Row label="Chart export DPI" value={String(cfg.chart_dpi)} />
+              </CardContent>
+            </Card>
 
-          <Card className="border-border/80 shadow-card">
-            <CardHeader>
-              <CardTitle className="text-base">Public URLs &amp; paths</CardTitle>
-              <CardDescription>Branding and filesystem roots.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="PUBLIC_API_URL" value={cfg.public_api_url || "—"} />
-              <Row label="PUBLIC_APP_URL" value={cfg.public_app_url || "—"} />
-              <Row label="Repo root" value={cfg.paths.repo_root} multiline />
-              <Row label="Data" value={cfg.paths.data_dir} />
-              <Row label="Outputs" value={cfg.paths.outputs_dir} />
-              <Row label="Uploads" value={cfg.paths.uploads_dir} />
-            </CardContent>
-          </Card>
+            <Card className="border-border/80 shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base">Uploads &amp; RAG</CardTitle>
+                <CardDescription>Limits and health thresholds.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <Row label="Branding max upload" value={`${cfg.branding_max_upload_mb} MB`} />
+                <Row label="Project file max" value={`${cfg.project_upload_max_mb} MB`} />
+                <Row label="RAG thresholds" value={JSON.stringify(cfg.rag_thresholds)} />
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/80 shadow-card">
+              <CardHeader>
+                <CardTitle className="text-base">Public URLs &amp; paths</CardTitle>
+                <CardDescription>Branding and filesystem roots.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <Row label="PUBLIC_API_URL" value={cfg.public_api_url || "—"} />
+                <Row label="PUBLIC_APP_URL" value={cfg.public_app_url || "—"} />
+                <Row label="Repo root" value={cfg.paths.repo_root} multiline />
+                <Row label="Data" value={cfg.paths.data_dir} />
+                <Row label="Outputs" value={cfg.paths.outputs_dir} />
+                <Row label="Uploads" value={cfg.paths.uploads_dir} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       ) : null}
     </div>

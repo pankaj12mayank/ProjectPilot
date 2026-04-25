@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -47,6 +47,9 @@ function cellBg(v: number | null | undefined): string {
 }
 
 export default function PortfolioPage() {
+  const [searchParams] = useSearchParams();
+  const focusProjectId = searchParams.get("project") ?? searchParams.get("projectId") ?? "";
+
   const [tab, setTab] = useState<Tab>("summary");
   const [summary, setSummary] = useState<PortfolioSummary | null>(null);
   const [comparison, setComparison] = useState<PortfolioComparison | null>(null);
@@ -55,31 +58,42 @@ export default function PortfolioPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [key, setKey] = useState(0);
+  const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setFetching(true);
       try {
         setError(null);
+        const bust = key;
         const [s, c, h] = await Promise.all([
-          fetchPortfolioSummary(),
-          fetchPortfolioComparison(),
-          fetchPortfolioRiskHeatmap(),
+          fetchPortfolioSummary(bust),
+          fetchPortfolioComparison(bust),
+          fetchPortfolioRiskHeatmap(bust),
         ]);
         if (cancelled) return;
         setSummary(s);
         setComparison(c);
         setHeatmap(h.projects);
         setDims(h.dimensions);
-        setSelectedId((prev) => prev || c.rows[0]?.project_id || "");
+        setSelectedId((prev) => {
+          const fromQuery =
+            focusProjectId && c.rows.some((r) => r.project_id === focusProjectId) ? focusProjectId : "";
+          if (fromQuery) return fromQuery;
+          if (prev && c.rows.some((r) => r.project_id === prev)) return prev;
+          return c.rows[0]?.project_id || "";
+        });
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load portfolio");
+      } finally {
+        if (!cancelled) setFetching(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [key, focusProjectId]);
 
   const chartData = useMemo(() => {
     if (!comparison || !selectedId) return [];
@@ -115,8 +129,14 @@ export default function PortfolioPage() {
       <Card
         title="Portfolio"
         actions={
-          <Button type="button" variant="secondary" className="pp-btn--sm" onClick={() => setKey((k) => k + 1)}>
-            Refresh
+          <Button
+            type="button"
+            variant="secondary"
+            className="pp-btn--sm"
+            disabled={fetching}
+            onClick={() => setKey((k) => k + 1)}
+          >
+            {fetching ? "Refreshing…" : "Refresh"}
           </Button>
         }
       >
@@ -149,7 +169,7 @@ export default function PortfolioPage() {
       {tab === "summary" ? (
         <>
           <Card title="Portfolio summary">
-            <div className="pp-widget-row" style={{ maxWidth: "48rem" }}>
+            <div className="pp-widget-row w-full max-w-none">
               <div className="pp-widget">
                 <div className="pp-widget__label">Projects in scope</div>
                 <div className="pp-widget__value">{summary.totals.projects}</div>
@@ -320,8 +340,8 @@ export default function PortfolioPage() {
               </label>
               <select
                 id="pf-trend"
-                className="pp-input"
-                style={{ maxWidth: "24rem", marginTop: "0.35rem" }}
+                className="pp-input w-full max-w-none"
+                style={{ marginTop: "0.35rem" }}
                 value={selectedId}
                 onChange={(e) => setSelectedId(e.target.value)}
               >

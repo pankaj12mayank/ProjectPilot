@@ -58,7 +58,7 @@ function fmtWhen(iso: string | null | undefined): string {
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <Card className="min-w-[140px] shrink-0 border-border/70 bg-gradient-to-br from-card to-card/80 shadow-card">
+    <Card className="h-full min-w-0 border-border/70 bg-gradient-to-br from-card to-card/80 shadow-card">
       <CardContent className="p-4">
         <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
         <p className="font-display mt-1 text-2xl font-bold tracking-tight text-foreground">{value}</p>
@@ -113,10 +113,17 @@ export default function AdminDashboardPage() {
   const roleEntries = stats?.role_breakdown ? Object.entries(stats.role_breakdown).sort((a, b) => b[1] - a[1]) : [];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Control center</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Live counts and shortcuts — same workspace shell as the rest of the app.</p>
+    <div className="mx-auto w-full max-w-[1600px] space-y-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Control center</h1>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+            Live counts and shortcuts — same workspace shell as the rest of the app.
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" className="shrink-0 rounded-xl" disabled={!stats && !error} onClick={() => void load()}>
+          Refresh data
+        </Button>
       </div>
 
       {error ? (
@@ -131,7 +138,7 @@ export default function AdminDashboardPage() {
         <>
           <section aria-label="Key metrics">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overview</h2>
-            <div className="flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               <StatCard label="Users" value={stats.total_users} hint={`${stats.users_active} active`} />
               <StatCard label="Projects" value={stats.total_projects} hint={`${stats.active_projects} active`} />
               <StatCard label="Reports" value={stats.reports_generated} hint={`${stats.report_runs_last_7_days} / 7d`} />
@@ -143,7 +150,7 @@ export default function AdminDashboardPage() {
 
           <section aria-label="Roles">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Accounts by role</h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex w-full flex-wrap justify-center gap-2 sm:justify-start">
               {roleEntries.length ? (
                 roleEntries.map(([role, n]) => (
                   <span
@@ -162,7 +169,7 @@ export default function AdminDashboardPage() {
 
           <section aria-label="Risk">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Portfolio risk</h2>
-            <div className="flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <StatCard
                 label="With metrics"
                 value={stats.risk_summary.projects_with_metrics}
@@ -174,7 +181,7 @@ export default function AdminDashboardPage() {
                 hint="score"
               />
               {stats.risk_summary.top_risky_projects.slice(0, 5).map((p) => (
-                <Card key={p.project_id} className="min-w-[200px] shrink-0 border-border/70 shadow-card">
+                <Card key={p.project_id} className="h-full min-w-0 border-border/70 shadow-card">
                   <CardContent className="p-4">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Hot project</p>
                     <Link className="mt-1 block truncate font-medium text-primary hover:underline" to={`/dashboard/projects/${p.project_id}/health`}>
@@ -197,7 +204,7 @@ export default function AdminDashboardPage() {
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="outline"
                   className="rounded-xl"
                   disabled={actOff === 0 || actLoading}
                   onClick={() => setActOff((o) => Math.max(0, o - ACT_PAGE))}
@@ -207,7 +214,7 @@ export default function AdminDashboardPage() {
                 <Button
                   type="button"
                   size="sm"
-                  variant="secondary"
+                  variant="outline"
                   className="rounded-xl"
                   disabled={actOff + ACT_PAGE >= actTotal || actLoading}
                   onClick={() => setActOff((o) => o + ACT_PAGE)}
@@ -245,17 +252,17 @@ export default function AdminDashboardPage() {
 
           <section aria-label="Shortcuts">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Shortcuts</h2>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild variant="secondary" className="rounded-xl">
+            <div className="flex w-full flex-wrap justify-center gap-2 sm:justify-start">
+              <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/admin/branding">Branding</Link>
               </Button>
-              <Button asChild variant="secondary" className="rounded-xl">
+              <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/admin/users">Users</Link>
               </Button>
-              <Button asChild variant="secondary" className="rounded-xl">
+              <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/admin/audit">Audit</Link>
               </Button>
-              <Button asChild variant="secondary" className="rounded-xl">
+              <Button asChild variant="outline" className="rounded-xl">
                 <Link to="/dashboard/admin/system">System</Link>
               </Button>
               <Button asChild className="rounded-xl">

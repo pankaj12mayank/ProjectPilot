@@ -93,7 +93,7 @@ export default function ProjectRisksPage() {
   if (loading && !project) return <PageLoader />;
 
   return (
-    <div className="pp-grid pp-grid--1">
+    <div className="pp-grid pp-grid--1 mx-auto w-full max-w-[1600px]">
       <Card
         title={project ? `Project risks — ${project.name}` : "Project risks"}
         actions={
@@ -115,16 +115,16 @@ export default function ProjectRisksPage() {
             {error}
           </p>
         ) : null}
-        <p className="pp-muted">
+        <p className="pp-muted mx-auto max-w-2xl text-center text-pretty">
           Register risks here (severity and open/closed status). They are stored on the project, can be linked to a
           report job id, and appear on the dashboard, health analytics, and generated report narratives.
         </p>
 
-        <form onSubmit={handleCreate} className="pp-stack" style={{ marginTop: "1.25rem", maxWidth: "36rem" }}>
+        <form onSubmit={handleCreate} className="pp-stack mx-auto w-full max-w-3xl" style={{ marginTop: "1.25rem" }}>
           <FormField label="Title" htmlFor="risk-title">
             <input
               id="risk-title"
-              className="pp-input"
+              className="pp-input w-full max-w-none"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Short description of the risk"
@@ -134,7 +134,7 @@ export default function ProjectRisksPage() {
           <FormField label="Details (optional)" htmlFor="risk-desc">
             <textarea
               id="risk-desc"
-              className="pp-input"
+              className="pp-input w-full max-w-none"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -142,7 +142,12 @@ export default function ProjectRisksPage() {
             />
           </FormField>
           <FormField label="Severity" htmlFor="risk-sev">
-            <select id="risk-sev" className="pp-input" value={severity} onChange={(e) => setSeverity(e.target.value as (typeof SEVERITIES)[number])}>
+            <select
+              id="risk-sev"
+              className="pp-input w-full max-w-none"
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value as (typeof SEVERITIES)[number])}
+            >
               {SEVERITIES.map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -153,19 +158,21 @@ export default function ProjectRisksPage() {
           <FormField label="Link to report job (optional)" htmlFor="risk-job">
             <input
               id="risk-job"
-              className="pp-input"
+              className="pp-input w-full max-w-none"
               value={reportJobId}
               onChange={(e) => setReportJobId(e.target.value)}
               placeholder="UUID from report history / URL jobId="
             />
           </FormField>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : "Create risk"}
-          </Button>
+          <div className="flex w-full justify-center pt-1">
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : "Create risk"}
+            </Button>
+          </div>
         </form>
       </Card>
 
-      <Card title={`Registered risks (${risks.length})`}>
+      <Card title={`Registered risks (${risks.length})`} className="w-full">
         {risks.length === 0 ? (
           <p className="pp-muted">No risks yet. Add one above — open high-severity items drive mitigation suggestions in reports.</p>
         ) : (

@@ -23,18 +23,10 @@ function extOf(name: string): string {
   return i >= 0 ? name.slice(i + 1).toLowerCase() : "";
 }
 
-function validateAccentHex(value: string): string | null {
-  const v = value.trim();
-  if (!v) return null;
-  if (!/^#[0-9A-Fa-f]{6}$/.test(v)) return "Accent must be empty or #RRGGBB (e.g. #14B8A6)";
-  return null;
-}
-
 type Draft = {
   meta_title: string;
   meta_description: string;
   social: Record<string, string>;
-  accent_color: string;
 };
 
 function toDraft(b: BrandingAdmin): Draft {
@@ -49,7 +41,6 @@ function toDraft(b: BrandingAdmin): Draft {
       github: String(s.github ?? ""),
       youtube: String(s.youtube ?? ""),
     },
-    accent_color: (b.accent_color || "").trim(),
   };
 }
 
@@ -167,18 +158,12 @@ export default function AdminBrandingPage() {
 
   async function saveText() {
     if (!draft) return;
-    const accentErr = validateAccentHex(draft.accent_color);
-    if (accentErr) {
-      toast.push("error", accentErr);
-      return;
-    }
     setSaving(true);
     try {
       const body: Record<string, unknown> = {
         meta_title: draft.meta_title,
         meta_description: draft.meta_description,
         social: draft.social,
-        accent_color: draft.accent_color.trim(),
       };
       const b = await patchBrandingAdmin(body);
       setRemote(b);
@@ -310,11 +295,11 @@ export default function AdminBrandingPage() {
         <p className="pp-muted" style={{ marginBottom: "0.75rem" }}>
           Meta title is also used as the short product name when no logo is uploaded.
         </p>
-        <div className="pp-form pp-form--grid">
+        <div className="pp-form pp-form--grid pp-form--full">
           <FormField label="Meta title" htmlFor="b-mt">
             <input
               id="b-mt"
-              className="pp-input"
+              className="pp-input w-full max-w-none"
               value={draft.meta_title}
               onChange={(e) => setDraft((d) => (d ? { ...d, meta_title: e.target.value } : d))}
             />
@@ -322,7 +307,7 @@ export default function AdminBrandingPage() {
           <FormField label="Meta description" htmlFor="b-md">
             <textarea
               id="b-md"
-              className="pp-input"
+              className="pp-input w-full max-w-none"
               rows={3}
               value={draft.meta_description}
               onChange={(e) => setDraft((d) => (d ? { ...d, meta_description: e.target.value } : d))}
@@ -332,12 +317,12 @@ export default function AdminBrandingPage() {
       </Card>
 
       <Card title="Social links">
-        <div className="pp-form pp-form--grid">
+        <div className="pp-form pp-form--grid pp-form--full">
           {(["twitter", "linkedin", "facebook", "github", "youtube"] as const).map((k) => (
             <FormField key={k} label={k[0]!.toUpperCase() + k.slice(1)} htmlFor={`soc-${k}`}>
               <input
                 id={`soc-${k}`}
-                className="pp-input"
+                className="pp-input w-full max-w-none"
                 value={draft.social[k] ?? ""}
                 onChange={(e) =>
                   setDraft((d) =>
@@ -355,27 +340,12 @@ export default function AdminBrandingPage() {
         </div>
       </Card>
 
-      <Card title="Theme accent">
-        <p className="pp-muted">Optional #RRGGBB for charts and highlights. Leave blank for defaults.</p>
-        <div className="pp-form pp-form--grid">
-          <FormField label="Accent color" htmlFor="b-ac">
-            <input
-              id="b-ac"
-              className="pp-input"
-              placeholder="#14B8A6"
-              value={draft.accent_color}
-              onChange={(e) => setDraft((d) => (d ? { ...d, accent_color: e.target.value } : d))}
-            />
-          </FormField>
-        </div>
-      </Card>
-
       <div className="pp-form-actions">
         <Button type="button" variant="secondary" onClick={cancelEdits} disabled={saving}>
           Revert text
         </Button>
         <Button type="button" onClick={() => void saveText()} disabled={saving}>
-          {saving ? "Saving…" : "Save SEO, social & accent"}
+          {saving ? "Saving…" : "Save SEO & social"}
         </Button>
       </div>
     </div>

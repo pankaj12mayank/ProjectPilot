@@ -238,9 +238,12 @@ export type MetricsSnapshotListItem = {
 export async function fetchProjectMetricsSnapshots(
   projectId: string,
   limit = 50,
+  cacheBust?: string | number,
 ): Promise<MetricsSnapshotListItem[]> {
   const enc = encodeURIComponent(projectId);
-  const res = await apiFetch(`/projects/${enc}/metrics/snapshots?limit=${encodeURIComponent(String(limit))}`);
+  const sp = new URLSearchParams({ limit: String(limit) });
+  if (cacheBust !== undefined && cacheBust !== "") sp.set("_", String(cacheBust));
+  const res = await apiFetch(`/projects/${enc}/metrics/snapshots?${sp.toString()}`);
   return readJsonOk<MetricsSnapshotListItem[]>(res);
 }
 

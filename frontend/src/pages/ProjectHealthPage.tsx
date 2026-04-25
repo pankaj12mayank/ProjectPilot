@@ -23,7 +23,7 @@ import { KpiCard } from "../components/KpiCard";
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/PageLoader";
 import { Table } from "../components/ui/Table";
-import { Button } from "../components/ui/Button";
+import { Button } from "@/components/shadcn/button";
 import {
   CHART_AXIS_STROKE,
   CHART_GRID_STROKE,
@@ -63,7 +63,7 @@ function RagBanner({ rag }: { rag: ProjectHealthResponse["rag"] }) {
   const cls =
     rag.status === "Red" ? "pp-rag pp-rag--red" : rag.status === "Amber" ? "pp-rag pp-rag--amber" : "pp-rag pp-rag--green";
   return (
-    <div className={cls}>
+    <div className={`${cls} w-full max-w-none`}>
       <div className="pp-rag__head">
         <RagStrip status={rag.status} />
         <div className="pp-rag__status">RAG: {rag.status}</div>
@@ -93,6 +93,7 @@ export default function ProjectHealthPage() {
   const [data, setData] = useState<ProjectHealthResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [healthBusy, setHealthBusy] = useState(false);
   const [snapshotMsg, setSnapshotMsg] = useState<string | null>(null);
   const [snapshotBusy, setSnapshotBusy] = useState(false);
   const [snapshots, setSnapshots] = useState<MetricsSnapshotListItem[] | null>(null);
@@ -100,15 +101,18 @@ export default function ProjectHealthPage() {
   const [snapshotListNonce, setSnapshotListNonce] = useState(0);
 
   useEffect(() => {
+    if (!projectId) return;
     let cancelled = false;
     (async () => {
-      if (!projectId) return;
+      setHealthBusy(true);
       try {
         setError(null);
-        const h = await fetchProjectHealth(projectId);
+        const h = await fetchProjectHealth(projectId, refreshKey);
         if (!cancelled) setData(h);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load analytics");
+      } finally {
+        if (!cancelled) setHealthBusy(false);
       }
     })();
     return () => {
@@ -122,7 +126,7 @@ export default function ProjectHealthPage() {
     setSnapshotsError(null);
     (async () => {
       try {
-        const rows = await fetchProjectMetricsSnapshots(projectId, 40);
+        const rows = await fetchProjectMetricsSnapshots(projectId, 40, `${refreshKey}-${snapshotListNonce}`);
         if (!cancelled) setSnapshots(rows);
       } catch (e) {
         if (!cancelled) {
@@ -209,41 +213,51 @@ export default function ProjectHealthPage() {
   const { kpis, evm, risk, milestones, resources, dependencies } = data;
 
   return (
-    <div className="pp-grid pp-grid--1">
+    <div className="mx-auto w-full max-w-[1600px]">
+      <div className="pp-grid pp-grid--1 w-full">
       <Card
+        className="w-full"
         title="Project health summary"
         actions={
-          <div className="pp-row-actions">
-            <Button type="button" variant="secondary" className="pp-btn--sm" onClick={() => setRefreshKey((k) => k + 1)}>
-              Refresh metrics
+          <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2 lg:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={healthBusy}
+              onClick={() => setRefreshKey((k) => k + 1)}
+            >
+              {healthBusy ? "Refreshing…" : "Refresh metrics"}
             </Button>
             <Button
               type="button"
-              variant="secondary"
-              className="pp-btn--sm"
-              disabled={snapshotBusy}
+              variant="outline"
+              size="sm"
+              className="rounded-xl"
+              disabled={snapshotBusy || healthBusy}
               onClick={() => void handleRecordSnapshot()}
             >
               {snapshotBusy ? "Saving…" : "Record portfolio snapshot"}
             </Button>
-            <Link to="/dashboard/portfolio" className="pp-btn pp-btn--secondary pp-btn--sm">
-              Portfolio
-            </Link>
-            <Link to={`/dashboard/projects/${projectId}/forecast`} className="pp-btn pp-btn--secondary pp-btn--sm">
-              Forecast
-            </Link>
-            <Link to={`/dashboard/projects/${projectId}/recommendations`} className="pp-btn pp-btn--secondary pp-btn--sm">
-              Recommendations
-            </Link>
-            <Link to={`/dashboard/projects/${projectId}/reports`} className="pp-btn pp-btn--secondary pp-btn--sm">
-              Reports
-            </Link>
-            <Link to={`/dashboard/projects/${projectId}/upload`} className="pp-btn pp-btn--secondary pp-btn--sm">
-              Upload data
-            </Link>
-            <Link to={`/dashboard/projects/${projectId}`} className="pp-btn pp-btn--secondary pp-btn--sm">
-              Project details
-            </Link>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to="/dashboard/portfolio">Portfolio</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to={`/dashboard/projects/${projectId}/forecast`}>Forecast</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to={`/dashboard/projects/${projectId}/recommendations`}>Recommendations</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to={`/dashboard/projects/${projectId}/reports`}>Reports</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to={`/dashboard/projects/${projectId}/upload`}>Upload data</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="rounded-xl">
+              <Link to={`/dashboard/projects/${projectId}`}>Project details</Link>
+            </Button>
           </div>
         }
       >
@@ -664,6 +678,7 @@ export default function ProjectHealthPage() {
             <p className="pp-muted">No inferred chain.</p>
           )}
         </Card>
+      </div>
       </div>
     </div>
   );

@@ -1,8 +1,6 @@
 import type { ComponentType } from "react";
 import {
   Activity,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   FileStack,
   FolderKanban,
@@ -21,13 +19,11 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { isPlatformAdmin } from "../auth/roleUtils";
 import { useBranding } from "../branding/BrandingProvider";
-import { Button } from "@/components/shadcn/button";
 import { ScrollArea } from "@/components/shadcn/scroll-area";
 import { Separator } from "@/components/shadcn/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
 import { useSidebarLogoInvertClass, type SidebarLogoFilter } from "@/hooks/useSidebarLogoInvertClass";
 import { cn } from "@/lib/utils";
-import { ThemeToggle, useTheme } from "@/theme";
+import { useTheme } from "@/theme";
 
 type NavItem = {
   to: string;
@@ -56,17 +52,9 @@ const adminNav: NavItem[] = [
   { to: "/dashboard/admin/system", label: "System", icon: Wrench },
 ];
 
-function NavButton({
-  item,
-  collapsed,
-  onNavigate,
-}: {
-  item: NavItem;
-  collapsed: boolean;
-  onNavigate?: () => void;
-}) {
+function NavButton({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const Icon = item.icon;
-  const link = (
+  return (
     <NavLink
       to={item.to}
       end={item.end}
@@ -74,7 +62,6 @@ function NavButton({
       className={({ isActive }) =>
         cn(
           "pp-type-sidebar group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
-          collapsed && "justify-center px-2",
           isActive
             ? "bg-[hsl(var(--sidebar-accent)/0.22)] font-medium text-sidebar-foreground shadow-[inset_0_1px_0_0_hsl(var(--sidebar-accent)/0.35)] ring-1 ring-[hsl(var(--sidebar-accent)/0.35)]"
             : "font-medium text-sidebar-muted hover:bg-[hsl(var(--sidebar-foreground)/0.06)] hover:text-sidebar-foreground",
@@ -82,34 +69,12 @@ function NavButton({
       }
     >
       <Icon className="size-[1.15rem] shrink-0 opacity-90" />
-      {!collapsed ? <span className="truncate">{item.label}</span> : null}
+      <span className="truncate">{item.label}</span>
     </NavLink>
   );
-
-  if (collapsed) {
-    return (
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{link}</TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">
-          {item.label}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-  return link;
 }
 
-export function AppSidebar({
-  mobileOpen,
-  collapsed,
-  onCollapseChange,
-  onNavigate,
-}: {
-  mobileOpen: boolean;
-  collapsed: boolean;
-  onCollapseChange: (v: boolean) => void;
-  onNavigate?: () => void;
-}) {
+export function AppSidebar({ mobileOpen, onNavigate }: { mobileOpen: boolean; onNavigate?: () => void }) {
   const { user } = useAuth();
   const { branding } = useBranding();
   const { resolved } = useTheme();
@@ -126,52 +91,29 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-soft backdrop-blur-sm transition-all duration-300 ease-out md:translate-x-0",
-        collapsed ? "w-[4.5rem]" : "w-60",
+        "fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-soft backdrop-blur-sm transition-transform duration-300 ease-out md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
       )}
     >
-      <div className={cn("flex h-16 items-center gap-2 border-b border-sidebar-border px-3", collapsed && "justify-center px-2")}>
-        <div className={cn("flex min-w-0 flex-1 items-center gap-2", collapsed && "flex-none justify-center")}>
-          {logo && !collapsed ? (
+      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          {logo ? (
             <img
               src={logo}
               alt=""
               className={cn("h-8 max-w-[9.5rem] object-contain object-left transition-[filter] duration-200", logoInvertClass)}
             />
           ) : (
-            <span className={cn("truncate text-sm font-semibold tracking-tight text-sidebar-foreground", collapsed && "sr-only")}>
-              {product}
-            </span>
+            <span className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">{product}</span>
           )}
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "hidden shrink-0 text-sidebar-muted hover:bg-white/[0.08] hover:text-sidebar-foreground md:inline-flex",
-            collapsed && "mx-auto",
-          )}
-          onClick={() => onCollapseChange(!collapsed)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
-        </Button>
       </div>
 
       <ScrollArea className="flex-1 px-2 py-3">
         <nav className="flex flex-col gap-0.5">
-          <p
-            className={cn(
-              "mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted",
-              collapsed && "sr-only",
-            )}
-          >
-            Workspace
-          </p>
+          <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted">Workspace</p>
           {primaryNav.map((item) => (
-            <NavButton key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
+            <NavButton key={item.to} item={item} onNavigate={onNavigate} />
           ))}
         </nav>
 
@@ -179,16 +121,9 @@ export function AppSidebar({
           <>
             <Separator className="my-3 bg-sidebar-border" />
             <nav className="flex flex-col gap-0.5">
-              <p
-                className={cn(
-                  "mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted",
-                  collapsed && "sr-only",
-                )}
-              >
-                Administration
-              </p>
+              <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted">Administration</p>
               {adminNav.map((item) => (
-                <NavButton key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
+                <NavButton key={item.to} item={item} onNavigate={onNavigate} />
               ))}
             </nav>
           </>
@@ -196,31 +131,9 @@ export function AppSidebar({
 
         <Separator className="my-3 bg-sidebar-border" />
         <nav className="flex flex-col gap-0.5">
-          <p
-            className={cn(
-              "mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted",
-              collapsed && "sr-only",
-            )}
-          >
-            Account
-          </p>
-          <NavButton item={{ to: "/dashboard/settings", label: "Settings", icon: Settings }} collapsed={collapsed} onNavigate={onNavigate} />
+          <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted">Account</p>
+          <NavButton item={{ to: "/dashboard/settings", label: "Settings", icon: Settings }} onNavigate={onNavigate} />
         </nav>
-
-        <div
-          className={cn(
-            "mt-3 flex items-center gap-2 border-t border-sidebar-border px-2 py-3",
-            collapsed && "flex-col justify-center px-1",
-          )}
-        >
-          <p className={cn("text-[11px] font-medium uppercase tracking-wider text-sidebar-muted", collapsed && "sr-only")}>
-            Theme
-          </p>
-          <ThemeToggle
-            variant="icon"
-            className="border-white/15 bg-white/5 text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
-          />
-        </div>
       </ScrollArea>
     </aside>
   );
