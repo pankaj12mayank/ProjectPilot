@@ -5,8 +5,6 @@ from __future__ import annotations
 import re
 import unicodedata
 
-import pandas as pd
-
 from app.constants.columns import RaidColumns, StatusColumns, WeeklyHistoryColumns
 
 FileRole = str  # status_tracker | raid_log | weekly_history
@@ -65,7 +63,7 @@ def _build_rename_map(columns: list[str], synonym_map: dict[str, str]) -> dict[s
     return rename
 
 
-def map_dataframe_columns(df: pd.DataFrame, role: FileRole) -> tuple[pd.DataFrame, dict[str, str]]:
+def map_dataframe_columns(df: object, role: FileRole) -> tuple[object, dict[str, str]]:
     """Return a copy with columns renamed to canonical names where synonyms match."""
     if role == "status_tracker":
         sm = STATUS_HEADER_MAP

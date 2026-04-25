@@ -24,7 +24,14 @@ import {
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/PageLoader";
-import { CHART_AXIS_STROKE, CHART_GRID_STROKE, CHART_SERIES } from "@/theme";
+import {
+  CHART_AXIS_STROKE,
+  CHART_GRID_STROKE,
+  CHART_SERIES,
+  rechartsTooltipContentStyle,
+  rechartsTooltipItemStyle,
+  rechartsTooltipLabelStyle,
+} from "@/theme";
 
 type Tab = "summary" | "compare" | "heatmap" | "trends";
 
@@ -104,7 +111,7 @@ export default function PortfolioPage() {
   const data = comparison;
 
   return (
-    <div className="pp-grid pp-grid--1">
+    <div className="pp-grid pp-grid--1 mx-auto max-w-7xl">
       <Card
         title="Portfolio"
         actions={
@@ -114,9 +121,8 @@ export default function PortfolioPage() {
         }
       >
         <p className="pp-muted">
-          Admin, PMO, and project managers see all projects; other roles see their own. History and files stay tied to
-          each{" "}
-          <code>project_id</code>.
+          Administrators, PMO, and project managers see every project in scope. Other roles see only projects they own
+          or are invited to. Each project keeps its own uploads, snapshots, and history.
         </p>
         {error ? <p className="pp-field__error">{error}</p> : null}
         <div className="pp-log-tabs" style={{ marginTop: "0.75rem" }}>
@@ -143,7 +149,7 @@ export default function PortfolioPage() {
       {tab === "summary" ? (
         <>
           <Card title="Portfolio summary">
-            <div className="pp-widget-row">
+            <div className="pp-widget-row" style={{ maxWidth: "48rem" }}>
               <div className="pp-widget">
                 <div className="pp-widget__label">Projects in scope</div>
                 <div className="pp-widget__value">{summary.totals.projects}</div>
@@ -164,13 +170,9 @@ export default function PortfolioPage() {
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
                     <Tooltip
-                      contentStyle={{
-                        borderRadius: 12,
-                        border: "1px solid hsl(var(--border))",
-                        background: "hsl(var(--card))",
-                        color: "hsl(var(--card-foreground))",
-                        fontSize: 12,
-                      }}
+                      contentStyle={rechartsTooltipContentStyle}
+                      itemStyle={rechartsTooltipItemStyle}
+                      labelStyle={rechartsTooltipLabelStyle}
                     />
                     <Bar dataKey="value" name="Projects" fill={CHART_SERIES[1]} radius={[6, 6, 0, 0]} />
                   </BarChart>
@@ -340,13 +342,9 @@ export default function PortfolioPage() {
                   <YAxis yAxisId="left" tick={{ fontSize: 10 }} stroke={CHART_AXIS_STROKE} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} stroke={CHART_AXIS_STROKE} />
                   <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: "1px solid hsl(var(--border))",
-                      background: "hsl(var(--card))",
-                      color: "hsl(var(--card-foreground))",
-                      fontSize: 12,
-                    }}
+                    contentStyle={rechartsTooltipContentStyle}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
                   />
                   <Legend />
                   <Line

@@ -115,14 +115,21 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)) 
     settings = get_settings()
     user = user_service.get_by_email(db, body.email)
     dev_token: str | None = None
+    reset_link: str | None = None
     if user is not None:
         token = user_service.set_password_reset(db, user)
         logger.info("Password reset requested for %s", body.email)
         if settings.dev_return_reset_token:
             dev_token = token
+        base = (settings.public_app_url or "").strip().rstrip("/")
+        if dev_token and base:
+            from urllib.parse import quote
+
+            reset_link = f"{base}/reset-password?token={quote(dev_token, safe='')}"
     return ForgotPasswordResponse(
         message="If an account exists for that email, password reset instructions have been recorded.",
         dev_reset_token=dev_token,
+        reset_link=reset_link,
     )
 
 

@@ -54,6 +54,7 @@ export type AuditLogQuery = {
   action?: string;
   entity_type?: string;
   entity_id?: string;
+  actor_user_id?: string;
   date_from?: string;
   date_to?: string;
   limit?: number;
@@ -77,6 +78,16 @@ export type ActivityLogQuery = {
 
 export async function fetchActivityLogsPaged(q: ActivityLogQuery = {}): Promise<Paginated<ActivityLogRow>> {
   const res = await apiFetch(`/logs/activity${buildQuery(q)}`);
+  return readJsonOk<Paginated<ActivityLogRow>>(res);
+}
+
+export type AdminActivityLogQuery = ActivityLogQuery & {
+  actor_user_id?: string;
+};
+
+/** Platform admins: all activity, or narrow with actor_user_id. */
+export async function fetchAdminActivityLogsPaged(q: AdminActivityLogQuery = {}): Promise<Paginated<ActivityLogRow>> {
+  const res = await apiFetch(`/admin/activity-logs${buildQuery(q)}`);
   return readJsonOk<Paginated<ActivityLogRow>>(res);
 }
 

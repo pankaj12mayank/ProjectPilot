@@ -10,7 +10,6 @@ from typing import Any
 
 from app.config.settings import Settings
 from app.db.models import GeneratedReportArtifact, ProjectMetricsSnapshot, ProjectReportRun
-from app.services.analytics.project_health import build_project_health_payload
 from app.services.intelligence.package import build_intelligence_bundle
 from app.services.metrics_snapshot import snapshot_metrics_json
 from app.services.snapshot_storage import write_metrics_snapshot_file
@@ -34,6 +33,8 @@ def generate_project_report_package(
     job_id: str | None = None,
     actor_user_id: str | None = None,
 ) -> dict[str, Any]:
+    from app.services.analytics.project_health import build_project_health_payload
+
     job = job_id or str(uuid.uuid4())
     out_dir = settings.outputs_dir / "reports" / job
     out_dir.mkdir(parents=True, exist_ok=True)

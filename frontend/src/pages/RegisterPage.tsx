@@ -2,10 +2,13 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { postLoginPath } from "../auth/roleUtils";
+import { useBranding } from "../branding/BrandingProvider";
 import { validateRegisterForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
+import { PasswordInput } from "../components/ui/PasswordInput";
+import { useTheme } from "@/theme";
 
 export default function RegisterPage() {
   const { register, user, ready } = useAuth();
@@ -46,8 +49,22 @@ export default function RegisterPage() {
     }
   }
 
+  const product = (branding?.meta_title || "ProjectPilot").trim() || "ProjectPilot";
+  const urls = branding?.asset_urls ?? {};
+  const logoLight = urls.logo as string | undefined;
+  const logoDark = (urls.logo_dark as string | undefined) || logoLight;
+  const logo = resolved === "dark" ? logoDark : logoLight;
+
   return (
     <div className="pp-auth">
+      <div className="mb-6 flex flex-col items-center gap-3 text-center">
+        {logo ? (
+          <img src={logo} alt="" className="h-12 max-w-[220px] object-contain" />
+        ) : (
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{product}</h1>
+        )}
+        <p className="max-w-md text-sm text-muted-foreground">Create an account to join the workspace.</p>
+      </div>
       <Card title="Create account">
         <form className="pp-form" onSubmit={onSubmit} noValidate>
           {error ? (
@@ -80,10 +97,8 @@ export default function RegisterPage() {
             />
           </FormField>
           <FormField label="Password (min 8 characters)" htmlFor="reg-password" error={fieldErrors.password}>
-            <input
+            <PasswordInput
               id="reg-password"
-              className="pp-input"
-              type="password"
               autoComplete="new-password"
               value={password}
               onChange={(e) => {
@@ -93,10 +108,8 @@ export default function RegisterPage() {
             />
           </FormField>
           <FormField label="Confirm password" htmlFor="reg-confirm" error={fieldErrors.confirmPassword}>
-            <input
+            <PasswordInput
               id="reg-confirm"
-              className="pp-input"
-              type="password"
               autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => {

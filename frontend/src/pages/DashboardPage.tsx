@@ -30,6 +30,7 @@ import { Button } from "@/components/shadcn/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card";
 import { Progress } from "@/components/shadcn/progress";
 import { Skeleton } from "@/components/shadcn/skeleton";
+import { rechartsTooltipContentStyle, rechartsTooltipItemStyle, rechartsTooltipLabelStyle } from "@/theme";
 function fmt(n: number | null | undefined, d = 1) {
   if (n == null || !Number.isFinite(Number(n))) return "—";
   return Number(n).toFixed(d);
@@ -135,8 +136,6 @@ export default function DashboardPage() {
       ? null
       : withComp.reduce((a, r) => a + Number(r.latest_completion_pct), 0) / withComp.length;
 
-  const avgRisk = summary?.average_risk_score ?? null;
-
   if (!ready || !user) {
     return <PageLoader />;
   }
@@ -156,13 +155,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="mx-auto w-full max-w-7xl space-y-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="pp-type-dashboard-title text-foreground">Dashboard</h1>
-          <p className="mt-1 font-sans text-sm leading-relaxed text-muted-foreground">
-            Welcome back, <span className="font-medium text-foreground">{user.full_name}</span> — portfolio snapshot
-            and delivery signals.
+          <p className="mt-1 max-w-3xl font-sans text-sm leading-relaxed text-muted-foreground">
+            Signed in as <span className="font-medium text-foreground">{user.full_name}</span>. Below is a portfolio
+            snapshot with delivery and risk signals from the latest data.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -171,10 +170,31 @@ export default function DashboardPage() {
           </Button>
           {isPlatformAdmin(user.role) ? (
             <Button asChild className="rounded-xl">
-              <Link to="/admin">Administration</Link>
+              <Link to="/dashboard/admin">Administration</Link>
             </Button>
           ) : null}
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-card/60 p-3 shadow-sm backdrop-blur-sm">
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/portfolio">Portfolio</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/reports">Reports</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/risks">Risks</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/recommendations">Recommendations</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/logs">Activity and logs</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm" className="rounded-xl">
+          <Link to="/dashboard/templates">Templates</Link>
+        </Button>
       </div>
 
       {error ? (
@@ -249,11 +269,9 @@ export default function DashboardPage() {
                   <XAxis dataKey="t" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <YAxis domain={[0, "auto"]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={36} />
                   <Tooltip
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: "1px solid hsl(var(--border))",
-                      fontSize: 12,
-                    }}
+                    contentStyle={rechartsTooltipContentStyle}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
                   />
                   <Line type="monotone" dataKey="spi" name="SPI" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
                   <Line type="monotone" dataKey="cpi" name="CPI" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
@@ -288,7 +306,11 @@ export default function DashboardPage() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={rechartsTooltipContentStyle}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -351,11 +373,9 @@ export default function DashboardPage() {
                 <XAxis dataKey="t" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} width={36} />
                 <Tooltip
-                  contentStyle={{
-                    borderRadius: 12,
-                    border: "1px solid hsl(var(--border))",
-                    fontSize: 12,
-                  }}
+                  contentStyle={rechartsTooltipContentStyle}
+                  itemStyle={rechartsTooltipItemStyle}
+                  labelStyle={rechartsTooltipLabelStyle}
                 />
                 <Line type="monotone" dataKey="completion" name="Completion %" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} />
               </LineChart>
@@ -394,34 +414,6 @@ export default function DashboardPage() {
           </Button>
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-border/80">
-          <CardHeader className="pb-2">
-            <CardDescription>Average risk</CardDescription>
-            <CardTitle className="pp-type-kpi-value text-2xl tabular-nums">{fmt(avgRisk, 2)}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">Lower is generally healthier for this index.</CardContent>
-        </Card>
-        <Card className="border-border/80">
-          <CardHeader className="pb-2">
-            <CardDescription>Forecasted delays</CardDescription>
-            <CardTitle className="text-2xl">{delayed > 0 ? "Elevated" : "Stable"}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xs text-muted-foreground">Derived from SPI distribution across active projects.</CardContent>
-        </Card>
-        <Card className="border-border/80">
-          <CardHeader className="pb-2">
-            <CardDescription>Recommendations</CardDescription>
-            <CardTitle className="text-2xl">Per project</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" size="sm" className="rounded-xl">
-              <Link to="/dashboard/recommendations">Open hub</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
 
     </div>
   );

@@ -10,7 +10,6 @@ from typing import Any
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.constants.roles import is_platform_admin
 from app.db.models import ActivityLog, AuditLog, NotificationLog, Project, User
 
 
@@ -29,6 +28,7 @@ class LogQuery:
     action: str | None = None
     entity_type: str | None = None
     entity_id: str | None = None
+    actor_user_id: str | None = None
     date_from: datetime | None = None
     date_to: datetime | None = None
     limit: int = 100
@@ -53,6 +53,8 @@ def _audit_predicates(f: LogQuery) -> list[Any]:
         preds.append(AuditLog.entity_type.ilike(f"%{f.entity_type.strip()}%"))
     if f.entity_id and f.entity_id.strip():
         preds.append(AuditLog.entity_id == f.entity_id.strip())
+    if f.actor_user_id and str(f.actor_user_id).strip():
+        preds.append(AuditLog.actor_user_id == str(f.actor_user_id).strip())
     if f.date_from is not None:
         preds.append(AuditLog.created_at >= f.date_from)
     if f.date_to is not None:
@@ -109,9 +111,48 @@ def _activity_predicates(f: LogQuery) -> list[Any]:
 
 
 def list_activity_logs(db: Session, viewer: User, f: LogQuery) -> tuple[list[dict[str, Any]], int]:
+    """Product activity: each user sees only rows they performed (actor_user_id)."""
+    preds = [ActivityLog.actor_user_id == viewer.id, *_activity_predicates(f)]
+
+    cnt_stmt = select(func.count(ActivityLog.id)).select_from(ActivityLog).outerjoin(Project, Project.id == ActivityLog.project_id)
+    stmt = (
+        select(ActivityLog, Project.name)
+        .outerjoin(Project, Project.id == ActivityLog.project_id)
+        .order_by(ActivityLog.created_at.desc())
+    )
+    if preds:
+        w = and_(*preds)
+        cnt_stmt = cnt_stmt.where(w)
+        stmt = stmt.where(w)
+    total = int(db.scalar(cnt_stmt) or 0)
+    rows = list(db.execute(stmt.offset(f.offset).limit(f.limit)).all())
+    items = []
+    for row in rows:
+        r, pname = row[0], row[1]
+        items.append(
+            {
+                "id": r.id,
+                "created_at": r.created_at,
+                "actor_user_id": r.actor_user_id,
+                "project_id": r.project_id,
+                "project_name": pname,
+                "kind": r.kind,
+                "summary": r.summary,
+                "detail": _detail(r.detail_json),
+            },
+        )
+    return items, total
+
+
+def list_activity_logs_admin(db: Session, admin: User, f: LogQuery) -> tuple[list[dict[str, Any]], int]:
+    """Platform admins: optional actor_user_id narrows to one user; otherwise all actors."""
+    from app.constants.roles import is_platform_admin
+
+    if not is_platform_admin(admin.role):
+        return [], 0
     preds = _activity_predicates(f)
-    if not is_platform_admin(viewer.role):
-        preds = [ActivityLog.actor_user_id == viewer.id, *preds]
+    if f.actor_user_id and str(f.actor_user_id).strip():
+        preds.insert(0, ActivityLog.actor_user_id == str(f.actor_user_id).strip())
 
     cnt_stmt = select(func.count(ActivityLog.id)).select_from(ActivityLog).outerjoin(Project, Project.id == ActivityLog.project_id)
     stmt = (

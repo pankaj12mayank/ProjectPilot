@@ -6,28 +6,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function RecommendationsHubPage() {
   return (
-    <div className="space-y-8">
+    <div className="mx-auto w-full max-w-6xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recommendations</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Model-backed actions and recovery paths are generated per project after intelligence runs.
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          After intelligence runs complete for a project, structured recommendations appear on that project&apos;s
+          recommendations page. Pick a project below or browse the full list.
         </p>
       </div>
-      <Card className="max-w-2xl border-border/80">
+      <Card className="w-full border-border/80">
         <CardHeader>
-          <div className="flex size-10 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-400">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-[hsl(var(--brand-secondary)/0.18)] text-[hsl(var(--brand-secondary))] dark:bg-[hsl(var(--brand-secondary)/0.22)] dark:text-[hsl(86_32%_78%)]">
             <Sparkles className="size-5" />
           </div>
           <CardTitle className="text-base">Open project recommendations</CardTitle>
           <CardDescription>
-            Recommendations are generated per project. Browse all projects or open one you already work on.
+            Choose a project you can access. You will be taken to its recommendations view with filters and export
+            actions where data exists.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <ProjectQuickPick
             destination="recommendations"
             title="Pick a project"
-            description="Choose a project you can access, then go to its Recommendations page."
+            description="Lists every project in your workspace that you may open."
           />
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button asChild className="rounded-xl">

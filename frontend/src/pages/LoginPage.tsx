@@ -7,9 +7,12 @@ import { validateLoginForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
+import { PasswordInput } from "../components/ui/PasswordInput";
+import { useTheme } from "@/theme";
 
 export default function LoginPage() {
   const { branding } = useBranding();
+  const { resolved } = useTheme();
   const { login, user, ready } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,10 +53,22 @@ export default function LoginPage() {
   }
 
   const title = (branding?.meta_title || "ProjectPilot").trim() || "ProjectPilot";
+  const urls = branding?.asset_urls ?? {};
+  const logoLight = urls.logo as string | undefined;
+  const logoDark = (urls.logo_dark as string | undefined) || logoLight;
+  const logo = resolved === "dark" ? logoDark : logoLight;
 
   return (
     <div className="pp-auth">
-      <Card title={`Sign in to ${title}`}>
+      <div className="mb-6 flex flex-col items-center gap-3 text-center">
+        {logo ? (
+          <img src={logo} alt="" className="h-12 max-w-[220px] object-contain" />
+        ) : (
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+        )}
+        <p className="max-w-md text-sm text-muted-foreground">Sign in to continue to your workspace.</p>
+      </div>
+      <Card title={`Sign in`}>
         <form className="pp-form" onSubmit={onSubmit} noValidate>
           {error ? (
             <p className="pp-field__error" role="alert">
@@ -74,10 +89,8 @@ export default function LoginPage() {
             />
           </FormField>
           <FormField label="Password" htmlFor="login-password" error={fieldErrors.password}>
-            <input
+            <PasswordInput
               id="login-password"
-              className="pp-input"
-              type="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => {

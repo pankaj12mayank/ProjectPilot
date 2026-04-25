@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from starlette.responses import Response
+from starlette.responses import FileResponse, Response
 
+from app.config.settings import get_settings
 from app.db.models import User
 from app.db.session import get_db
 from app.deps.auth import get_current_user
 from app.deps.rbac import require_platform_admin
-from app.schemas.user import UserCreate, UserOut, UserSelfUpdate, UserUpdate
+from app.schemas.user import UserCreate, UserOut, UserPasswordChange, UserSelfUpdate, UserUpdate
 from app.services import event_log_service, user_service
 
 router = APIRouter()
@@ -28,6 +29,64 @@ def update_me(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return UserOut.model_validate(updated)
+
+
+@router.post("/me/change-password", status_code=204)
+def change_my_password(
+    body: UserPasswordChange,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> Response:
+    try:
+        user_service.change_password_for_user(
+            db,
+            user,
+            current_password=body.current_password,
+            new_password=body.new_password,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return Response(status_code=204)
+
+
+@router.post("/me/avatar", response_model=UserOut)
+async def upload_my_avatar(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    file: UploadFile = File(...),
+) -> UserOut:
+    settings = get_settings()
+    raw = await file.read()
+    try:
+        user_service.save_user_avatar(
+            db,
+            user,
+            content=raw,
+            original_filename=file.filename or "",
+            uploads_dir=settings.uploads_dir,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    fresh = user_service.get_by_id(db, user.id)
+    assert fresh is not None
+    return UserOut.model_validate(fresh)
+
+
+@router.get("/public/avatar/{user_id}")
+def get_public_avatar(user_id: str, db: Session = Depends(get_db)) -> FileResponse:
+    """Public image URL for profile photos (suitable for <img src> without auth headers)."""
+    settings = get_settings()
+    target = user_service.get_by_id(db, user_id.strip())
+    if target is None or not target.has_avatar:
+        raise HTTPException(status_code=404, detail="Not found")
+    path = user_service.avatar_disk_path(settings.uploads_dir, target)
+    if path is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    mt = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}.get(
+        path.suffix.lower(),
+        "application/octet-stream",
+    )
+    return FileResponse(path, media_type=mt)
 
 
 @router.get("", response_model=list[UserOut])

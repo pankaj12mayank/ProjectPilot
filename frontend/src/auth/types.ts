@@ -37,4 +37,6 @@ export type User = {
   is_active: boolean;
   theme_preference?: ThemePreference | null;
   created_at?: string;
+  has_avatar?: boolean;
+  updated_at?: string;
 };

@@ -4,18 +4,16 @@ from __future__ import annotations
 
 import warnings
 
-import pandas as pd
-
 from app.constants.columns import RaidColumns, StatusColumns, WeeklyHistoryColumns
 
 
-def strip_column_names(df: pd.DataFrame) -> pd.DataFrame:
+def strip_column_names(df: object) -> object:
     out = df.copy()
     out.columns = [str(c).strip() for c in out.columns]
     return out
 
 
-def clean_string_cells(df: pd.DataFrame) -> pd.DataFrame:
+def clean_string_cells(df: object) -> object:
     out = df.copy()
     for col in out.columns:
         if out[col].dtype == object:
@@ -23,11 +21,13 @@ def clean_string_cells(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _coerce_numeric(series: pd.Series) -> pd.Series:
+def _coerce_numeric(series: object) -> object:
+    import pandas as pd
+
     return pd.to_numeric(series, errors="coerce")
 
 
-def clean_status_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+def clean_status_dataframe(df: object) -> tuple[object, list[str]]:
     warnings_list: list[str] = []
     out = strip_column_names(df)
     out = clean_string_cells(out)
@@ -52,13 +52,13 @@ def clean_status_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     return out, warnings_list
 
 
-def clean_raid_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+def clean_raid_dataframe(df: object) -> tuple[object, list[str]]:
     out = strip_column_names(df)
     out = clean_string_cells(out)
     return out, []
 
 
-def clean_history_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+def clean_history_dataframe(df: object) -> tuple[object, list[str]]:
     out = strip_column_names(df)
     out = clean_string_cells(out)
     if WeeklyHistoryColumns.COMPLETION in out.columns:
@@ -66,7 +66,7 @@ def clean_history_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     return out, []
 
 
-def clean_for_role(df: pd.DataFrame, role: str) -> tuple[pd.DataFrame, list[str]]:
+def clean_for_role(df: object, role: str) -> tuple[object, list[str]]:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         if role == "status_tracker":

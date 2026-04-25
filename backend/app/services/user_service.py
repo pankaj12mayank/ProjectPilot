@@ -4,6 +4,7 @@ import json
 import logging
 import secrets
 import uuid
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import delete, func, select, update
@@ -126,6 +127,20 @@ def ensure_user_migrations(db: Session) -> None:
             else:
                 db.execute(text("ALTER TABLE users ADD COLUMN theme_preference VARCHAR(16)"))
             db.commit()
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "avatar_ext" not in cols:
+            if dialect == "postgresql":
+                db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_ext VARCHAR(8)"))
+            else:
+                db.execute(text("ALTER TABLE users ADD COLUMN avatar_ext VARCHAR(8)"))
+            db.commit()
+        cols = {c["name"] for c in insp.get_columns("users")}
+        if "has_avatar" not in cols:
+            if dialect == "postgresql":
+                db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS has_avatar BOOLEAN DEFAULT FALSE"))
+            else:
+                db.execute(text("ALTER TABLE users ADD COLUMN has_avatar BOOLEAN DEFAULT 0"))
+            db.commit()
         _normalize_legacy_user_roles(db)
         migrate_projectpilot_system_owner_remove_localhost(db)
     except Exception:
@@ -204,6 +219,47 @@ def reset_password_with_token(db: Session, token: str, new_password: str) -> Non
 
 def list_users(db: Session) -> list[User]:
     return list(db.scalars(select(User).order_by(User.created_at.desc())).all())
+
+
+def change_password_for_user(db: Session, user: User, *, current_password: str, new_password: str) -> None:
+    if not verify_password(current_password, user.hashed_password):
+        raise ValueError("Current password is incorrect")
+    user.hashed_password = hash_password(new_password)
+    user.updated_at = datetime.now(timezone.utc)
+    db.add(user)
+    db.commit()
+
+
+def save_user_avatar(db: Session, user: User, *, content: bytes, original_filename: str, uploads_dir: Path) -> None:
+    ext = Path(original_filename or "").suffix.lower().lstrip(".")
+    if ext == "jpeg":
+        ext = "jpg"
+    if ext not in ("png", "jpg", "webp"):
+        raise ValueError("Use a PNG, JPEG, or WebP image.")
+    if len(content) > 512_000:
+        raise ValueError("Image too large (max 500 KB).")
+    dest_dir = uploads_dir / "avatars"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for p in dest_dir.glob(f"{user.id}.*"):
+        try:
+            p.unlink()
+        except OSError:
+            pass
+    dest = dest_dir / f"{user.id}.{ext}"
+    dest.write_bytes(content)
+    user.avatar_ext = ext
+    user.has_avatar = True
+    user.updated_at = datetime.now(timezone.utc)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+
+def avatar_disk_path(uploads_dir: Path, user: User) -> Path | None:
+    if not user.has_avatar or not user.avatar_ext:
+        return None
+    p = uploads_dir / "avatars" / f"{user.id}.{user.avatar_ext}"
+    return p if p.is_file() else None
 
 
 def update_self(db: Session, user: User, body: UserSelfUpdate) -> User:

@@ -5,6 +5,7 @@ import { validatePassword } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
+import { PasswordInput } from "../components/ui/PasswordInput";
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -64,10 +65,9 @@ export default function ResetPasswordPage() {
             />
           </FormField>
           <FormField label="New password" htmlFor="reset-password" error={passwordError}>
-            <input
+            <PasswordInput
               id="reset-password"
-              className="pp-input"
-              type="password"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);

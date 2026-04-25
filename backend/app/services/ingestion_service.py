@@ -7,7 +7,6 @@ import logging
 import uuid
 from typing import Any
 
-import pandas as pd
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
@@ -20,6 +19,8 @@ BATCH_FLUSH = 500
 
 
 def _jsonable_value(v: Any) -> Any:
+    import pandas as pd
+
     if v is None or (isinstance(v, float) and pd.isna(v)):
         return None
     if hasattr(v, "item"):
@@ -34,7 +35,7 @@ def _jsonable_value(v: Any) -> Any:
     return str(v)
 
 
-def dataframe_to_records(df: pd.DataFrame) -> list[dict[str, Any]]:
+def dataframe_to_records(df: Any) -> list[dict[str, Any]]:
     """One dict per row with string keys and JSON-friendly values."""
     out: list[dict[str, Any]] = []
     for _, row in df.reset_index(drop=True).iterrows():
@@ -50,7 +51,7 @@ def replace_ingested_rows_for_role(
     project_id: str,
     project_file_id: str,
     file_role: str,
-    df: pd.DataFrame,
+    df: Any,
 ) -> int:
     """Delete existing rows for this project+role and insert current dataframe. Caller should commit."""
     db.execute(

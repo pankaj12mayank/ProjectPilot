@@ -24,15 +24,16 @@ import { Card } from "../components/ui/Card";
 import { PageLoader } from "../components/PageLoader";
 import { Table } from "../components/ui/Table";
 import { Button } from "../components/ui/Button";
-import { CHART_AXIS_STROKE, CHART_GRID_STROKE, CHART_SERIES } from "@/theme";
+import {
+  CHART_AXIS_STROKE,
+  CHART_GRID_STROKE,
+  CHART_SERIES,
+  rechartsTooltipContentStyle,
+  rechartsTooltipItemStyle,
+  rechartsTooltipLabelStyle,
+} from "@/theme";
 
-const tooltipBox = {
-  borderRadius: 12,
-  border: "1px solid hsl(var(--border))",
-  background: "hsl(var(--card))",
-  color: "hsl(var(--card-foreground))",
-  fontSize: 12,
-};
+const tooltipBox = rechartsTooltipContentStyle;
 
 function fmt(n: number | null | undefined, digits = 1, suffix = ""): string {
   if (n == null || !Number.isFinite(Number(n))) return "—";
@@ -418,7 +419,11 @@ export default function ProjectHealthPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                     <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
-                    <Tooltip contentStyle={tooltipBox} />
+                    <Tooltip
+                      contentStyle={tooltipBox}
+                      itemStyle={rechartsTooltipItemStyle}
+                      labelStyle={rechartsTooltipLabelStyle}
+                    />
                     <Line
                       type="monotone"
                       dataKey="completion"
@@ -442,7 +447,11 @@ export default function ProjectHealthPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
                   <YAxis domain={[0, "auto"]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
-                  <Tooltip contentStyle={tooltipBox} />
+                  <Tooltip
+                    contentStyle={tooltipBox}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
+                  />
                   <Bar dataKey="value" fill={CHART_SERIES[0]} name="Index" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -458,7 +467,11 @@ export default function ProjectHealthPage() {
                       <Cell key={String(i)} fill={CHART_SERIES[i % CHART_SERIES.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={tooltipBox}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
+                  />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -481,7 +494,11 @@ export default function ProjectHealthPage() {
                       stroke={CHART_AXIS_STROKE}
                     />
                     <YAxis tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
-                    <Tooltip contentStyle={tooltipBox} />
+                    <Tooltip
+                      contentStyle={tooltipBox}
+                      itemStyle={rechartsTooltipItemStyle}
+                      labelStyle={rechartsTooltipLabelStyle}
+                    />
                     <Legend />
                     <Bar dataKey="planned" fill="hsl(var(--muted-foreground) / 0.45)" name="Planned h" />
                     <Bar dataKey="actual" fill={CHART_SERIES[0]} name="Actual h" />
@@ -504,7 +521,12 @@ export default function ProjectHealthPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} />
                   <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} stroke={CHART_AXIS_STROKE} />
                   <YAxis type="category" dataKey="name" width={76} tick={{ fontSize: 12 }} stroke={CHART_AXIS_STROKE} />
-                  <Tooltip formatter={(v: number) => [`${Number(v).toFixed(1)}%`, ""]} contentStyle={tooltipBox} />
+                  <Tooltip
+                    formatter={(v: number) => [`${Number(v).toFixed(1)}%`, ""]}
+                    contentStyle={tooltipBox}
+                    itemStyle={rechartsTooltipItemStyle}
+                    labelStyle={rechartsTooltipLabelStyle}
+                  />
                   <Bar dataKey="v" fill="hsl(var(--success))" radius={[0, 6, 6, 0]} barSize={28} />
                 </BarChart>
               </ResponsiveContainer>

@@ -67,7 +67,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
     const root = document.documentElement;
     root.classList.add("pp-theme-flip");
-    const t = window.setTimeout(() => root.classList.remove("pp-theme-flip"), 420);
+    const t = window.setTimeout(() => root.classList.remove("pp-theme-flip"), 320);
     return () => window.clearTimeout(t);
   }, [resolved]);
 

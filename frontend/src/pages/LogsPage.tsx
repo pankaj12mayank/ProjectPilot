@@ -147,7 +147,14 @@ export default function LogsPage() {
   return (
     <div className="pp-grid pp-grid--1">
       <Card title="Logs & history">
-        <p className="pp-muted">Search and filter server-side. Audit is admin-only. All activity rows include linked project_id when applicable.</p>
+        <p className="pp-muted">
+          Search and filter server-side. <strong>Activity</strong> shows only <strong>your own</strong> actions. Audit is admin-only. Project
+          admins can review anyone&apos;s activity under{" "}
+          <Link to="/dashboard/admin/activity" className="font-medium text-primary hover:underline">
+            Administration → Activity explorer
+          </Link>
+          .
+        </p>
         <div className="pp-log-tabs" role="tablist" style={{ marginTop: "1rem" }}>
           {(
             [

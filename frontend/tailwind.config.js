@@ -46,15 +46,13 @@ export default {
           foreground: "hsl(var(--popover-foreground))",
         },
         brand: {
-          indigo: "#4F46E5",
-          blue: "#3B82F6",
           secondary: "hsl(var(--brand-secondary) / <alpha-value>)",
           accent: "hsl(var(--brand-accent) / <alpha-value>)",
         },
         semantic: {
-          success: "#10B981",
-          warning: "#F59E0B",
-          danger: "#EF4444",
+          success: "hsl(var(--success))",
+          warning: "hsl(var(--warning))",
+          danger: "hsl(var(--danger))",
         },
         rag: {
           green: "hsl(var(--rag-green))",
@@ -77,18 +75,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: [
-          "Inter",
-          "ui-sans-serif",
-          "system-ui",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Arial",
-          "sans-serif",
-        ],
-        display: ["Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        hero: ["Sora", "Manrope", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        display: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+        hero: ["Sora", "Plus Jakarta Sans", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       fontSize: {
         "pp-dashboard": ["clamp(1.875rem, 1.2vw + 1.35rem, 2.5rem)", { lineHeight: "1.15", letterSpacing: "-0.02em" }],
@@ -98,14 +87,14 @@ export default {
         "pp-modal-title": ["clamp(1.25rem, 0.6vw + 1rem, 1.5rem)", { lineHeight: "1.2", letterSpacing: "-0.015em" }],
       },
       boxShadow: {
-        soft: "0 1px 2px hsl(222 47% 11% / 0.04), 0 4px 24px hsl(222 47% 11% / 0.06)",
-        card: "0 1px 2px hsl(222 47% 11% / 0.05), 0 12px 40px hsl(222 47% 11% / 0.06)",
-        "card-hover": "0 4px 24px hsl(222 47% 11% / 0.08), 0 16px 48px hsl(222 47% 11% / 0.1)",
-        "soft-dark": "0 1px 2px hsl(0 0% 0% / 0.35), 0 8px 32px hsl(0 0% 0% / 0.45)",
-        "card-dark": "0 1px 2px hsl(0 0% 0% / 0.4), 0 12px 40px hsl(0 0% 0% / 0.55)",
-        "card-hover-dark": "0 4px 28px hsl(217 91% 60% / 0.12), 0 20px 50px hsl(0 0% 0% / 0.55)",
-        glass: "0 8px 32px hsl(222 47% 11% / 0.08), inset 0 1px 0 0 hsl(0 0% 100% / 0.65)",
-        "glass-dark": "0 12px 40px hsl(0 0% 0% / 0.45), inset 0 1px 0 0 hsl(210 40% 98% / 0.06)",
+        soft: "0 1px 2px hsl(24 22% 8% / 0.04), 0 6px 28px hsl(24 18% 10% / 0.06)",
+        card: "0 1px 0 hsl(30 14% 86% / 0.9), 0 12px 40px hsl(24 20% 8% / 0.06)",
+        "card-hover": "0 1px 0 hsl(28 40% 52% / 0.25), 0 14px 44px hsl(24 22% 8% / 0.09)",
+        "soft-dark": "0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 32px hsl(0 0% 0% / 0.45)",
+        "card-dark": "0 1px 0 hsl(22 8% 24% / 0.9), 0 12px 40px hsl(0 0% 0% / 0.5)",
+        "card-hover-dark": "0 1px 0 hsl(36 88% 56% / 0.22), 0 18px 48px hsl(0 0% 0% / 0.55)",
+        glass: "0 8px 32px hsl(24 22% 8% / 0.07), inset 0 1px 0 0 hsl(40 35% 98% / 0.55)",
+        "glass-dark": "0 12px 40px hsl(0 0% 0% / 0.45), inset 0 1px 0 0 hsl(40 22% 96% / 0.05)",
       },
       keyframes: {
         "accordion-down": {

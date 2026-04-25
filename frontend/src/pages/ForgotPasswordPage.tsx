@@ -12,6 +12,7 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devToken, setDevToken] = useState<string | null>(null);
+  const [resetLink, setResetLink] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -19,6 +20,7 @@ export default function ForgotPasswordPage() {
     setMessage(null);
     setError(null);
     setDevToken(null);
+    setResetLink(null);
     const ev = validateEmail(email);
     setEmailError(ev);
     if (ev) return;
@@ -28,12 +30,18 @@ export default function ForgotPasswordPage() {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-      const data = await parseJson<{ message?: string; dev_reset_token?: string | null; detail?: string }>(res);
+      const data = await parseJson<{
+        message?: string;
+        dev_reset_token?: string | null;
+        reset_link?: string | null;
+        detail?: string;
+      }>(res);
       if (!res.ok) {
         throw new Error(typeof data.detail === "string" ? data.detail : "Request failed");
       }
       setMessage(data.message ?? "Request received.");
       if (data.dev_reset_token) setDevToken(data.dev_reset_token);
+      if (data.reset_link) setResetLink(data.reset_link);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -45,8 +53,9 @@ export default function ForgotPasswordPage() {
     <div className="pp-auth">
       <Card title="Forgot password">
         <p className="pp-muted">
-          Enter your email. If an account exists, a reset token is created on the server. In development you can
-          enable <code>DEV_RETURN_RESET_TOKEN=1</code> to receive a token in the response for testing.
+          Enter your email. If an account exists, a reset is prepared on the server. For local testing, set{" "}
+          <code>DEV_RETURN_RESET_TOKEN=1</code> and <code>PUBLIC_APP_URL</code> (for example your Vite URL) so the
+          response can include a ready-made reset link.
         </p>
         {error ? (
           <p className="pp-field__error" role="alert">
@@ -71,6 +80,13 @@ export default function ForgotPasswordPage() {
           </Button>
         </form>
         {message ? <p className="pp-success">{message}</p> : null}
+        {resetLink ? (
+          <p className="pp-muted" style={{ marginTop: "0.75rem" }}>
+            <a href={resetLink} className="font-medium text-primary underline-offset-4 hover:underline">
+              Open password reset
+            </a>
+          </p>
+        ) : null}
         {devToken ? (
           <div className="pp-dev-token">
             <strong>Dev reset token</strong>

@@ -29,11 +29,10 @@ from app.schemas.reports import ProjectIntelligenceOut, ProjectReportPackageOut,
 from app.schemas.project_risk import ProjectRiskCreate, ProjectRiskOut, ProjectRiskUpdate
 from app.services import event_log_service, project_service, risk_service
 from app.services.portfolio_service import list_project_metrics_snapshots, record_manual_snapshot
+from app.services.project_templates import list_template_dicts
 from app.services.project_history_service import build_project_history
-from app.services.analytics.project_health import build_project_health_payload
 from app.services.intelligence.package import build_intelligence_core
 from app.services.report_artifacts import resolve_report_artifact_path
-from app.services.report_package_service import generate_project_report_package
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -228,6 +227,8 @@ def generate_project_reports(
 ) -> ProjectReportPackageOut:
     """Forecast, root causes, recommendations, and multi-format exports under outputs/reports/{job_id}/."""
     try:
+        from app.services.report_package_service import generate_project_report_package
+
         payload = generate_project_report_package(
             db,
             project.id,
@@ -298,6 +299,8 @@ def get_project_intelligence(
 ) -> ProjectIntelligenceOut:
     """Forecast (completion, budget, risk, resources), root causes, and evidence-linked recommendations."""
     try:
+        from app.services.analytics.project_health import build_project_health_payload
+
         health = build_project_health_payload(db, project.id, get_settings())
         core = build_intelligence_core(health)
         return ProjectIntelligenceOut(
@@ -352,6 +355,8 @@ def record_metrics_snapshot(
     user: User = Depends(get_current_user),
 ) -> MetricsSnapshotOut:
     """Persist a trend point from current ingested data (no full report generation)."""
+    from app.services.analytics.project_health import build_project_health_payload
+
     health = build_project_health_payload(db, project.id, get_settings())
     out = record_manual_snapshot(db, project.id, health, get_settings())
     event_log_service.write_activity(
@@ -372,6 +377,8 @@ def get_project_health_analytics(
 ) -> dict:
     """KPI, EVM, risk, milestones, resources, dependencies, RAG — from last validated ingested uploads."""
     try:
+        from app.services.analytics.project_health import build_project_health_payload
+
         return build_project_health_payload(db, project.id, get_settings())
     except Exception as exc:
         logger.exception("Project health analytics failed project_id=%s", project.id)

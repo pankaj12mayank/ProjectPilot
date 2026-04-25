@@ -27,6 +27,9 @@ class User(Base):
     password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     #: Synced appearance: "light" | "dark" | "system"; null = use client default (e.g. localStorage).
     theme_preference: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    #: File extension for uploaded profile image (e.g. png, jpg).
+    avatar_ext: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    has_avatar: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Project(Base):

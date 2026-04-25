@@ -5,8 +5,7 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass, field
 from pathlib import PurePath
-
-import pandas as pd
+from typing import Any
 
 
 class ParseError(Exception):
@@ -15,18 +14,20 @@ class ParseError(Exception):
 
 @dataclass
 class ParseResult:
-    dataframe: pd.DataFrame
+    dataframe: Any
     sheet_used: str | None = None
     warnings: list[str] = field(default_factory=list)
 
 
-def _first_non_empty_sheet_excel(content: bytes, engine: str) -> tuple[pd.DataFrame, str | None, list[str]]:
+def _first_non_empty_sheet_excel(content: bytes, engine: str) -> tuple[Any, str | None, list[str]]:
+    import pandas as pd
+
     warnings: list[str] = []
     bio = io.BytesIO(content)
     xl = pd.ExcelFile(bio, engine=engine)
     names = list(xl.sheet_names)
     chosen: str | None = None
-    chosen_df: pd.DataFrame | None = None
+    chosen_df: Any = None
     for name in names:
         try:
             df = pd.read_excel(xl, sheet_name=name, header=0)
@@ -52,13 +53,15 @@ def _first_non_empty_sheet_excel(content: bytes, engine: str) -> tuple[pd.DataFr
     return chosen_df, chosen, warnings
 
 
-def parse_file_bytes(content: bytes, filename: str) -> pd.DataFrame:
+def parse_file_bytes(content: bytes, filename: str) -> Any:
     """Backward-compatible: dataframe only."""
     return parse_file_bytes_detailed(content, filename).dataframe
 
 
 def parse_file_bytes_detailed(content: bytes, filename: str) -> ParseResult:
     """Parse file; for Excel, pick the first sheet that contains tabular data."""
+    import pandas as pd
+
     suffix = PurePath(filename).suffix.lower()
     if suffix == ".csv":
         try:

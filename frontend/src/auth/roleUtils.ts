@@ -15,9 +15,11 @@ export function postLoginPath(
 ): string {
   const dest = fallbackFromState?.trim() || "/dashboard";
   if (isPlatformAdmin(role)) {
-    return dest.startsWith("/admin") ? dest : "/admin";
+    if (dest.startsWith("/dashboard/admin")) return dest;
+    if (dest.startsWith("/admin")) return dest.replace(/^\/admin/, "/dashboard/admin") || "/dashboard/admin";
+    return "/dashboard/admin";
   }
-  if (dest.startsWith("/admin")) {
+  if (dest.startsWith("/admin") || dest.startsWith("/dashboard/admin")) {
     return "/dashboard";
   }
   return dest;

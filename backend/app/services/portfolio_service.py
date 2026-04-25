@@ -14,8 +14,6 @@ from sqlalchemy.orm import Session
 from app.config.settings import Settings
 from app.constants.roles import ROLES_WITH_ALL_PROJECTS_READ
 from app.db.models import Project, ProjectMetricsSnapshot, ProjectReportRun, User
-from app.services import project_service
-
 logger = logging.getLogger(__name__)
 
 _SNAPSHOT_LIMIT = 24
@@ -24,6 +22,8 @@ _SNAPSHOT_LIMIT = 24
 def _projects_scope(db: Session, viewer: User) -> list[Project]:
     if viewer.role in ROLES_WITH_ALL_PROJECTS_READ:
         return list(db.scalars(select(Project).order_by(Project.updated_at.desc())).all())
+    from app.services import project_service
+
     return project_service.list_projects_for_user(db, viewer)
 
 

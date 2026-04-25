@@ -7,6 +7,7 @@ import { isSystemOwner } from "../auth/roleUtils";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { FormField } from "../components/ui/FormField";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { Modal } from "../components/ui/Modal";
 import { Table, type Column } from "../components/ui/Table";
 import { useToast } from "../components/ToastProvider";
@@ -81,6 +82,10 @@ export default function UsersPage() {
   const [cFullName, setCFullName] = useState("");
   const [cRole, setCRole] = useState<AssignableUserRole>("member");
   const [creating, setCreating] = useState(false);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SZ = 12;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,6 +111,34 @@ export default function UsersPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filteredRows = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (roleFilter && r.role !== roleFilter) return false;
+      if (!s) return true;
+      return (
+        r.email.toLowerCase().includes(s) ||
+        r.full_name.toLowerCase().includes(s) ||
+        (r.id && r.id.toLowerCase().includes(s))
+      );
+    });
+  }, [rows, roleFilter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SZ));
+  const pageSafe = Math.min(page, totalPages - 1);
+  const pagedRows = useMemo(
+    () => filteredRows.slice(pageSafe * PAGE_SZ, (pageSafe + 1) * PAGE_SZ),
+    [filteredRows, pageSafe],
+  );
+
+  useEffect(() => {
+    setPage(0);
+  }, [roleFilter, search]);
+
+  useEffect(() => {
+    setPage((p) => Math.min(p, Math.max(0, totalPages - 1)));
+  }, [totalPages]);
 
   useEffect(() => {
     if (modal) {
@@ -382,7 +415,58 @@ export default function UsersPage() {
       {loading ? <p className="pp-muted">Loading…</p> : null}
       {!loading && rows.length === 0 && !error ? <p className="pp-muted">No users.</p> : null}
       {!loading && rows.length > 0 ? (
-        <Table columns={columns} rows={rows} rowKey={(r) => r.id || r.email || JSON.stringify(r)} />
+        <div style={{ marginBottom: "1rem" }} className="pp-form pp-form--grid">
+          <FormField label="Search" htmlFor="u-search">
+            <input
+              id="u-search"
+              className="pp-input"
+              placeholder="Name, email, or id"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoComplete="off"
+            />
+          </FormField>
+          <FormField label="Role" htmlFor="u-role-filter">
+            <select id="u-role-filter" className="pp-input" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+              <option value="">All roles</option>
+              {(Object.keys(ROLE_LABELS) as UserRole[]).map((rk) => (
+                <option key={rk} value={rk}>
+                  {ROLE_LABELS[rk]}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        </div>
+      ) : null}
+      {!loading && filteredRows.length === 0 && rows.length > 0 ? (
+        <p className="pp-muted">No users match these filters.</p>
+      ) : null}
+      {!loading && pagedRows.length > 0 ? (
+        <>
+          <Table columns={columns} rows={pagedRows} rowKey={(r) => r.id || r.email || JSON.stringify(r)} />
+          {filteredRows.length > PAGE_SZ ? (
+            <div className="pp-row-actions" style={{ marginTop: "1rem", flexWrap: "wrap" }}>
+              <Button type="button" variant="secondary" disabled={pageSafe === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+                Previous
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={pageSafe >= totalPages - 1}
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              >
+                Next
+              </Button>
+              <span className="pp-muted" style={{ fontSize: "0.9rem" }}>
+                Page {pageSafe + 1} of {totalPages} ({filteredRows.length} users)
+              </span>
+            </div>
+          ) : (
+            <p className="pp-muted" style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
+              Showing {filteredRows.length} user{filteredRows.length === 1 ? "" : "s"}.
+            </p>
+          )}
+        </>
       ) : null}
 
       <Modal
@@ -480,10 +564,8 @@ export default function UsersPage() {
             />
           </FormField>
           <FormField label="Temporary password" htmlFor="c-pass">
-            <input
+            <PasswordInput
               id="c-pass"
-              className="pp-input"
-              type="password"
               autoComplete="new-password"
               value={cPassword}
               onChange={(e) => setCPassword(e.target.value)}

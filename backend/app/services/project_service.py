@@ -9,7 +9,6 @@ import shutil
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-import pandas as pd
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
@@ -157,7 +156,11 @@ def _serialize_cell(value: object) -> str | float | int | bool | None:
     return str(value)
 
 
-def _preview_from_df(df: pd.DataFrame, limit: int = 10) -> tuple[list[str], list[list[str | float | int | bool | None]]]:
+def _preview_from_df(df: object, limit: int = 10) -> tuple[list[str], list[list[str | float | int | bool | None]]]:
+    import pandas as pd
+
+    if not isinstance(df, pd.DataFrame):
+        return [], []
     head = df.head(limit)
     cols = [str(c) for c in head.columns]
     rows: list[list[str | float | int | bool | None]] = []
@@ -431,6 +434,8 @@ def _analyze_upload_slot_impl(
 
     parse_warnings = list(parse_out.warnings)
     df_raw = parse_out.dataframe
+    import pandas as pd
+
     if df_raw is None or not isinstance(df_raw, pd.DataFrame):
         return FileAnalyzeSlot(
             role=role,

@@ -3,14 +3,13 @@ from __future__ import annotations
 import logging
 import uuid
 from pathlib import Path
+from typing import Any
 
-import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.config.settings import get_settings
 from app.constants.columns import RaidColumns, StatusColumns, WeeklyHistoryColumns
 from app.db.models import GovernanceRun
-from app.services import calculations, charts, email_generator, rag, report_generator
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +29,10 @@ class GovernanceService:
         job = job_id or str(uuid.uuid4())
         out_dir = self._settings.outputs_dir / job
         out_dir.mkdir(parents=True, exist_ok=True)
+
+        import pandas as pd
+
+        from app.services import calculations, charts, email_generator, rag, report_generator
 
         status_df = pd.read_excel(status_path)
         raid_df = pd.read_excel(raid_path)
@@ -92,9 +95,9 @@ class GovernanceService:
 
     def _validate_inputs(
         self,
-        status_df: pd.DataFrame,
-        raid_df: pd.DataFrame,
-        history_df: pd.DataFrame,
+        status_df: Any,
+        raid_df: Any,
+        history_df: Any,
     ) -> None:
         status_required = {
             StatusColumns.PLANNED_PCT,

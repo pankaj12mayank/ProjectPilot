@@ -8,11 +8,14 @@ import {
   FolderKanban,
   LayoutDashboard,
   LineChart,
+  Palette,
   ScrollText,
   Settings,
   Shield,
+  ShieldCheck,
   Sparkles,
   Users,
+  Wrench,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
@@ -24,14 +27,13 @@ import { Separator } from "@/components/shadcn/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shadcn/tooltip";
 import { useSidebarLogoInvertClass, type SidebarLogoFilter } from "@/hooks/useSidebarLogoInvertClass";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/theme";
+import { ThemeToggle, useTheme } from "@/theme";
 
 type NavItem = {
   to: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
   end?: boolean;
-  adminOnly?: boolean;
 };
 
 const primaryNav: NavItem[] = [
@@ -45,9 +47,13 @@ const primaryNav: NavItem[] = [
   { to: "/dashboard/templates", label: "Templates", icon: FileStack },
 ];
 
-const bottomNav: NavItem[] = [
-  { to: "/admin/users", label: "Users", icon: Users, adminOnly: true },
-  { to: "/dashboard/settings", label: "Settings", icon: Settings },
+const adminNav: NavItem[] = [
+  { to: "/dashboard/admin", label: "Overview", icon: Activity, end: true },
+  { to: "/dashboard/admin/branding", label: "Branding", icon: Palette },
+  { to: "/dashboard/admin/users", label: "Users & roles", icon: Users },
+  { to: "/dashboard/admin/audit", label: "Audit log", icon: ShieldCheck },
+  { to: "/dashboard/admin/activity", label: "Activity explorer", icon: ClipboardList },
+  { to: "/dashboard/admin/system", label: "System", icon: Wrench },
 ];
 
 function NavButton({
@@ -70,8 +76,8 @@ function NavButton({
           "pp-type-sidebar group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
           collapsed && "justify-center px-2",
           isActive
-            ? "bg-[hsl(var(--sidebar-accent)/0.28)] font-medium text-sidebar-foreground shadow-sm ring-1 ring-white/10"
-            : "font-medium text-sidebar-muted hover:bg-white/[0.06] hover:text-sidebar-foreground",
+            ? "bg-[hsl(var(--sidebar-accent)/0.22)] font-medium text-sidebar-foreground shadow-[inset_0_1px_0_0_hsl(var(--sidebar-accent)/0.35)] ring-1 ring-[hsl(var(--sidebar-accent)/0.35)]"
+            : "font-medium text-sidebar-muted hover:bg-[hsl(var(--sidebar-foreground)/0.06)] hover:text-sidebar-foreground",
         )
       }
     >
@@ -168,6 +174,26 @@ export function AppSidebar({
             <NavButton key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
           ))}
         </nav>
+
+        {showAdmin ? (
+          <>
+            <Separator className="my-3 bg-sidebar-border" />
+            <nav className="flex flex-col gap-0.5">
+              <p
+                className={cn(
+                  "mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-sidebar-muted",
+                  collapsed && "sr-only",
+                )}
+              >
+                Administration
+              </p>
+              {adminNav.map((item) => (
+                <NavButton key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
+              ))}
+            </nav>
+          </>
+        ) : null}
+
         <Separator className="my-3 bg-sidebar-border" />
         <nav className="flex flex-col gap-0.5">
           <p
@@ -178,19 +204,23 @@ export function AppSidebar({
           >
             Account
           </p>
-          {showAdmin ? (
-            <NavButton
-              item={{ to: "/admin", label: "Administration", icon: Activity, end: true }}
-              collapsed={collapsed}
-              onNavigate={onNavigate}
-            />
-          ) : null}
-          {bottomNav
-            .filter((i) => !i.adminOnly || showAdmin)
-            .map((item) => (
-              <NavButton key={item.to} item={item} collapsed={collapsed} onNavigate={onNavigate} />
-            ))}
+          <NavButton item={{ to: "/dashboard/settings", label: "Settings", icon: Settings }} collapsed={collapsed} onNavigate={onNavigate} />
         </nav>
+
+        <div
+          className={cn(
+            "mt-3 flex items-center gap-2 border-t border-sidebar-border px-2 py-3",
+            collapsed && "flex-col justify-center px-1",
+          )}
+        >
+          <p className={cn("text-[11px] font-medium uppercase tracking-wider text-sidebar-muted", collapsed && "sr-only")}>
+            Theme
+          </p>
+          <ThemeToggle
+            variant="icon"
+            className="border-white/15 bg-white/5 text-sidebar-foreground hover:bg-white/10 hover:text-sidebar-foreground"
+          />
+        </div>
       </ScrollArea>
     </aside>
   );

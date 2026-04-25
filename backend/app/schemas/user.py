@@ -24,6 +24,8 @@ class UserOut(BaseModel):
     is_active: bool
     theme_preference: THEME_PREFERENCE | None = None
     created_at: datetime
+    has_avatar: bool = False
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -32,6 +34,11 @@ class UserSelfUpdate(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=255)
     email: EmailStr | None = None
     theme_preference: THEME_PREFERENCE | None = None
+
+
+class UserPasswordChange(BaseModel):
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
 
 
 class UserCreate(BaseModel):

@@ -12,11 +12,11 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         outline: "text-foreground",
         success:
-          "border-transparent bg-[hsl(var(--rag-green)/0.14)] text-[hsl(160_84%_26%)] dark:bg-[hsl(var(--rag-green)/0.18)] dark:text-emerald-200",
+          "border-transparent bg-[hsl(var(--rag-green)/0.14)] text-[hsl(var(--on-rag-green))] dark:bg-[hsl(var(--rag-green)/0.2)] dark:text-[hsl(var(--on-rag-green))]",
         warning:
-          "border-transparent bg-[hsl(var(--rag-amber)/0.14)] text-[hsl(32_94%_28%)] dark:bg-[hsl(var(--rag-amber)/0.2)] dark:text-amber-200",
+          "border-transparent bg-[hsl(var(--rag-amber)/0.14)] text-[hsl(var(--on-rag-amber))] dark:bg-[hsl(var(--rag-amber)/0.22)] dark:text-[hsl(var(--on-rag-amber))]",
         danger:
-          "border-transparent bg-[hsl(var(--rag-red)/0.14)] text-[hsl(0_72%_34%)] dark:bg-[hsl(var(--rag-red)/0.18)] dark:text-red-200",
+          "border-transparent bg-[hsl(var(--rag-red)/0.14)] text-[hsl(var(--on-rag-red))] dark:bg-[hsl(var(--rag-red)/0.2)] dark:text-[hsl(var(--on-rag-red))]",
         muted: "border-transparent bg-muted text-muted-foreground",
       },
     },

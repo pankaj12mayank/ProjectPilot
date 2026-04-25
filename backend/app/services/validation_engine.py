@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pandas as pd
-
 from app.constants.columns import RaidColumns, StatusColumns, WeeklyHistoryColumns
 
 FileRole = str
@@ -40,7 +38,7 @@ def _excel_row_num(pos: Any) -> int | None:
     return None
 
 
-def _require_columns(df: pd.DataFrame, required: set[str], role_label: str) -> list[dict[str, Any]]:
+def _require_columns(df: Any, required: set[str], role_label: str) -> list[dict[str, Any]]:
     missing = sorted(required - set(df.columns))
     if not missing:
         return []
@@ -53,20 +51,22 @@ def _require_columns(df: pd.DataFrame, required: set[str], role_label: str) -> l
     ]
 
 
-def _non_empty_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+def _non_empty_dataframe(df: Any) -> Any:
     return df.dropna(how="all")
 
 
-def _row_has_any_value(row: pd.Series) -> bool:
+def _row_has_any_value(row: Any) -> bool:
     return bool(row.notna().any())
 
 
 def _missing_required_cell_issues(
-    df: pd.DataFrame,
+    df: Any,
     required: list[str],
     label: str,
     max_rows: int = 40,
 ) -> list[dict[str, Any]]:
+    import pandas as pd
+
     issues: list[dict[str, Any]] = []
     data = _non_empty_dataframe(df)
     if data.empty:
@@ -94,7 +94,7 @@ def _missing_required_cell_issues(
     return issues
 
 
-def _duplicate_row_issues(df: pd.DataFrame, subset: list[str], code: str, message: str) -> list[dict[str, Any]]:
+def _duplicate_row_issues(df: Any, subset: list[str], code: str, message: str) -> list[dict[str, Any]]:
     issues: list[dict[str, Any]] = []
     cols = [c for c in subset if c in df.columns]
     if not cols:
@@ -115,7 +115,7 @@ def _duplicate_row_issues(df: pd.DataFrame, subset: list[str], code: str, messag
     return issues
 
 
-def validate_status_tracker(df: pd.DataFrame) -> list[dict[str, Any]]:
+def validate_status_tracker(df: Any) -> list[dict[str, Any]]:
     required = {
         StatusColumns.PLANNED_PCT,
         StatusColumns.ACTUAL_PCT,
@@ -181,7 +181,7 @@ def validate_status_tracker(df: pd.DataFrame) -> list[dict[str, Any]]:
     return _cap(issues)
 
 
-def validate_raid_log(df: pd.DataFrame) -> list[dict[str, Any]]:
+def validate_raid_log(df: Any) -> list[dict[str, Any]]:
     required = {RaidColumns.TYPE, RaidColumns.SEVERITY, RaidColumns.STATUS}
     issues: list[dict[str, Any]] = []
     issues.extend(_require_columns(df, required, "RAID log"))
@@ -205,7 +205,7 @@ def validate_raid_log(df: pd.DataFrame) -> list[dict[str, Any]]:
     return _cap(issues)
 
 
-def validate_weekly_history(df: pd.DataFrame) -> list[dict[str, Any]]:
+def validate_weekly_history(df: Any) -> list[dict[str, Any]]:
     required = {WeeklyHistoryColumns.WEEK, WeeklyHistoryColumns.COMPLETION}
     issues: list[dict[str, Any]] = []
     issues.extend(_require_columns(df, required, "Weekly history"))
@@ -243,7 +243,7 @@ def validate_weekly_history(df: pd.DataFrame) -> list[dict[str, Any]]:
     return _cap(issues)
 
 
-def validate_dataframe(df: pd.DataFrame, role: FileRole) -> list[dict[str, Any]]:
+def validate_dataframe(df: Any, role: FileRole) -> list[dict[str, Any]]:
     if role == "status_tracker":
         return validate_status_tracker(df)
     if role == "raid_log":

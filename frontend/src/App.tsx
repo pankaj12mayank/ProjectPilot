@@ -1,12 +1,11 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { isPlatformAdmin } from "./auth/roleUtils";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PageLoader } from "./components/PageLoader";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RequireRole } from "./routes/RequireRole";
-import { AdminLayout } from "./layouts/AdminLayout";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -40,6 +39,7 @@ const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminBrandingPage = lazy(() => import("./pages/AdminBrandingPage"));
 const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
 const AdminSystemPage = lazy(() => import("./pages/AdminSystemPage"));
+const AdminActivityPage = lazy(() => import("./pages/AdminActivityPage"));
 
 function AuthShell() {
   return (
@@ -53,13 +53,19 @@ function AuthShell() {
   );
 }
 
+function LegacyAdminRedirect() {
+  const { pathname, search } = useLocation();
+  const tail = pathname.length > "/admin".length ? pathname.slice("/admin".length) : "";
+  return <Navigate to={`/dashboard/admin${tail}${search}`} replace />;
+}
+
 function RootRedirect() {
   const { user, ready } = useAuth();
   if (!ready) {
     return <PageLoader />;
   }
   if (user) {
-    return <Navigate to={isPlatformAdmin(user.role) ? "/admin" : "/dashboard"} replace />;
+    return <Navigate to={isPlatformAdmin(user.role) ? "/dashboard/admin" : "/dashboard"} replace />;
   }
   return <Navigate to="/login" replace />;
 }
@@ -75,57 +81,8 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
       <Route element={<ProtectedRoute />}>
-        <Route
-          path="/admin"
-          element={
-            <ErrorBoundary>
-              <AdminLayout />
-            </ErrorBoundary>
-          }
-        >
-          <Route element={<RequireRole roles={["admin", "system_owner"]} />}>
-            <Route
-              index
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <AdminDashboardPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="branding"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <AdminBrandingPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="users"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <UsersPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="audit"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <AdminAuditPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="system"
-              element={
-                <Suspense fallback={<PageLoader />}>
-                  <AdminSystemPage />
-                </Suspense>
-              }
-            />
-          </Route>
-        </Route>
+        <Route path="/admin" element={<LegacyAdminRedirect />} />
+        <Route path="/admin/*" element={<LegacyAdminRedirect />} />
         <Route
           path="/dashboard"
           element={
@@ -310,6 +267,57 @@ export default function App() {
               </Suspense>
             }
           />
+
+          <Route element={<RequireRole roles={["admin", "system_owner"]} />}>
+            <Route
+              path="admin"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminDashboardPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/branding"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminBrandingPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/users"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <UsersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/audit"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminAuditPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/activity"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminActivityPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/system"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminSystemPage />
+                </Suspense>
+              }
+            />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

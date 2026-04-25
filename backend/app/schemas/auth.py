@@ -29,6 +29,8 @@ class ForgotPasswordRequest(BaseModel):
 class ForgotPasswordResponse(BaseModel):
     message: str
     dev_reset_token: str | None = None
+    #: When dev token is returned and PUBLIC_APP_URL is set, a ready-to-open reset URL for testing.
+    reset_link: str | None = None
 
 
 class ResetPasswordRequest(BaseModel):
