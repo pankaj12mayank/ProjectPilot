@@ -34,5 +34,5 @@ echo.
 echo OK: dist\ProjectPilotSetup.exe
 echo     dist\SETUP_NOTES.txt
 echo.
-echo Zip the EXE + SETUP_NOTES with your full repo tree ^(backend, frontend, .env.example, run.bat^) for others.
+echo Zip the EXE + SETUP_NOTES with your full repo tree ^(backend, frontend, tools, .env.example, run.bat^) for others.
 endlocal

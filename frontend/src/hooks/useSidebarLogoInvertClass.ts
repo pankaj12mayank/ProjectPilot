@@ -7,12 +7,17 @@ const ALPHA_THRESHOLD = 250;
 /**
  * CSS filters for the dark sidebar rail: opaque raster logos (e.g. JPEG / opaque PNG)
  * are auto-inverted for contrast; transparent PNG/WebP/SVG typically skip invert in `auto`.
+ * On a light sidebar rail (`darkRail` false), auto mode never inverts so logos match the shell.
  */
-export function useSidebarLogoInvertClass(imageUrl: string | undefined, preference: SidebarLogoFilter): string {
+export function useSidebarLogoInvertClass(
+  imageUrl: string | undefined,
+  preference: SidebarLogoFilter,
+  darkRail = true,
+): string {
   const [opaqueRaster, setOpaqueRaster] = useState(false);
 
   useEffect(() => {
-    if (!imageUrl || preference !== "auto") {
+    if (!imageUrl || preference !== "auto" || !darkRail) {
       setOpaqueRaster(false);
       return;
     }
@@ -57,10 +62,11 @@ export function useSidebarLogoInvertClass(imageUrl: string | undefined, preferen
     };
     img.onerror = () => setOpaqueRaster(false);
     img.src = imageUrl;
-  }, [imageUrl, preference]);
+  }, [imageUrl, preference, darkRail]);
 
   if (!imageUrl) return "";
   if (preference === "invert") return "brightness-0 invert";
   if (preference === "original") return "";
+  if (!darkRail) return "";
   return opaqueRaster ? "brightness-0 invert" : "";
 }

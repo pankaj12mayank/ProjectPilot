@@ -86,14 +86,14 @@ export function AppSidebar({ mobileOpen, onNavigate }: { mobileOpen: boolean; on
   const logoDark = (urls.logo_dark as string | undefined) || logoLight;
   const logo = resolved === "dark" ? logoDark : logoLight;
   const logoFilter: SidebarLogoFilter = "auto";
-  const logoInvertClass = useSidebarLogoInvertClass(logo, logoFilter);
+  const logoInvertClass = useSidebarLogoInvertClass(logo, logoFilter, resolved === "dark");
 
   const showAdmin = Boolean(user && isPlatformAdmin(user.role));
 
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-soft backdrop-blur-sm transition-transform duration-300 ease-out md:translate-x-0",
+        "fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-soft backdrop-blur-sm transition-[transform,background-color,border-color,box-shadow,color] duration-300 ease-out dark:shadow-soft-dark md:translate-x-0",
         mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
       )}
     >

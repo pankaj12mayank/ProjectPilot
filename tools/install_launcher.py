@@ -124,6 +124,12 @@ def run_cli_setup() -> int:
         input("Press Enter to close…")
         return r.returncode
 
+    fe_env = root / "frontend" / ".env"
+    fe_ex = root / "frontend" / ".env.example"
+    if not fe_env.is_file() and fe_ex.is_file():
+        shutil.copy(fe_ex, fe_env)
+        print("Created frontend/.env from frontend/.env.example (default VITE_API_URL for local dev).", flush=True)
+
     env_example = root / ".env.example"
     env_file = root / ".env"
     if not env_file.is_file() and env_example.is_file():
@@ -136,9 +142,9 @@ def run_cli_setup() -> int:
     print("", flush=True)
     print("Done. Next steps:", flush=True)
     print("  1. Edit .env (JWT_SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, CORS_ORIGINS, DATABASE_URL if needed)")
-    print(r"  2. API:  .\.venv\Scripts\python.exe run.py")
-    print("  3. UI:   cd frontend && npm run dev")
-    print("  4. Sign in with the admin from .env; add users under Admin → Users.")
+    print(r"  2. Start API + UI:  .\.venv\Scripts\python.exe tools\dev_server.py")
+    print(r"     Or double-click run.bat (uses your PATH Python; installs deps then runs dev_server).")
+    print("  3. Sign in with the admin from .env; add users under Admin → Users.")
     input("\nPress Enter to close…")
     return 0
 

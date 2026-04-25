@@ -73,12 +73,12 @@
     --chart-4: 14 62% 44%;
     --chart-5: 32 28% 52%;
 
-    /* Sidebar — deep warm graphite */
-    --sidebar: 24 14% 11%;
-    --sidebar-foreground: 40 28% 96%;
-    --sidebar-muted: 32 10% 62%;
-    --sidebar-accent: 28 82% 52%;
-    --sidebar-border: 22 12% 18%;
+    /* Sidebar — light: warm panel rail (distinct from page bg); .dark overrides to graphite */
+    --sidebar: 36 24% 92%;
+    --sidebar-foreground: 24 18% 14%;
+    --sidebar-muted: 25 8% 42%;
+    --sidebar-accent: 28 82% 46%;
+    --sidebar-border: 30 14% 86%;
 
     /* Elevation / tables */
     --surface-raised: 34 20% 93%;

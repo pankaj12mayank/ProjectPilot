@@ -14,6 +14,16 @@ What this is NOT
 • Python 3.11+ and Node.js (npm) must ALREADY be installed and available on your PATH.
 • ProjectPilotSetup.exe only opens a console that runs built-in setup (--run-setup). No separate script file is required.
 
+After setup — how to run the app
+---------------------------------
+• From the repo folder: double-click run.bat, or run:  .\.venv\Scripts\python.exe tools\dev_server.py
+• That starts the API (port 8000) and the Vite dev UI (port 5173). See README.md for URLs and .env details.
+
+After you update the folder (git pull / copy new files)
+--------------------------------------------------------
+• Optional check:  python tools\verify_setup.py
+• Then start again with run.bat or tools\dev_server.py as above.
+
 Network and other failures
 ----------------------------
 • pip and npm need internet access to their registries. If something fails, it is not always an “internet error”.

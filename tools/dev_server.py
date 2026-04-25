@@ -1,8 +1,10 @@
 """
-Single entrypoint: installs backend deps if needed, starts API + Vite dev server.
+Dev entrypoint: installs backend deps if missing, checks imports, starts API + Vite.
 
-Backend must import FastAPI, reporting stack (reportlab, python-docx, python-pptx),
-and the app package. Usage (from repository root):  python run.py
+From repository root:
+  python tools/dev_server.py
+
+On Windows you can double-click run.bat instead (it installs deps then runs this script).
 """
 
 from __future__ import annotations
@@ -15,9 +17,11 @@ import sys
 import time
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parent.parent
 BACKEND = REPO / "backend"
 FRONTEND = REPO / "frontend"
+
+import env_bootstrap  # noqa: E402 — `tools/` is on sys.path when launched as `python tools/dev_server.py`
 
 
 def _ensure_backend_deps() -> None:
@@ -55,6 +59,11 @@ def _ensure_frontend_deps() -> None:
 
 def main() -> None:
     os.chdir(REPO)
+    if env_bootstrap.ensure_env_from_example(REPO, ".env.example", ".env"):
+        print("Created .env from .env.example — set JWT_SECRET_KEY and ADMIN_EMAIL / ADMIN_PASSWORD, then restart if needed.")
+    if env_bootstrap.ensure_env_from_example(REPO, "frontend/.env.example", "frontend/.env"):
+        print("Created frontend/.env from frontend/.env.example — VITE_API_URL defaults to http://127.0.0.1:8000 for local dev.")
+
     _ensure_backend_deps()
     _ensure_frontend_deps()
 

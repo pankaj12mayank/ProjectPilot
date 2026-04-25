@@ -1,14 +1,18 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-REM ProjectPilot: installs backend (incl. reportlab, python-docx, python-pptx) + frontend, then runs run.py
+REM ProjectPilot: installs backend (incl. reportlab, python-docx, python-pptx) + frontend, then starts API + Vite via tools\dev_server.py
 
 if not exist ".env" (
-    echo [ProjectPilot] .env not found — copying .env.example to .env
-    copy /Y ".env.example" ".env" >nul
-    echo Edit .env and set ADMIN_EMAIL + ADMIN_PASSWORD, then run this batch again.
-    pause
-    exit /b 0
+    if exist ".env.example" (
+        echo [ProjectPilot] .env not found — copying .env.example to .env
+        copy /Y ".env.example" ".env" >nul
+        echo [ProjectPilot] Edit .env for production ^(JWT_SECRET_KEY, ADMIN_*^). Continuing startup...
+    ) else (
+        echo [ProjectPilot] ERROR: .env.example missing — cannot bootstrap .env
+        pause
+        exit /b 1
+    )
 )
 
 echo [ProjectPilot] Updating backend ^(pip^)...
@@ -31,12 +35,19 @@ if errorlevel 1 (
 )
 popd
 
-echo [ProjectPilot] Starting API + UI ^(python run.py^)...
-echo   Docs http://127.0.0.1:8000/docs  -  UI http://127.0.0.1:5173  -  reports: outputs\reports\
-python run.py
+if not exist "frontend\.env" (
+    if exist "frontend\.env.example" (
+        copy /Y "frontend\.env.example" "frontend\.env" >nul
+        echo [ProjectPilot] Created frontend\.env from frontend\.env.example
+    )
+)
+
+echo [ProjectPilot] Starting API + UI ^(python tools\dev_server.py^)...
+echo   Docs http://127.0.0.1:8000/docs  -  UI http://127.0.0.1:5173
+python tools\dev_server.py
 set "EC=%ERRORLEVEL%"
 if not "%EC%"=="0" (
-    echo run.py exited with code %EC%.
+    echo dev_server exited with code %EC%.
     pause
 )
 exit /b %EC%
