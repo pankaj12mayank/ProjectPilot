@@ -6,6 +6,7 @@ import {
   FolderKanban,
   LayoutDashboard,
   LineChart,
+  Mail,
   Palette,
   ScrollText,
   Settings,
@@ -46,6 +47,7 @@ const primaryNav: NavItem[] = [
 const adminNav: NavItem[] = [
   { to: "/dashboard/admin", label: "Overview", icon: Activity, end: true },
   { to: "/dashboard/admin/branding", label: "Branding", icon: Palette },
+  { to: "/dashboard/admin/email", label: "Email / SMTP", icon: Mail },
   { to: "/dashboard/admin/users", label: "Users & roles", icon: Users },
   { to: "/dashboard/admin/audit", label: "Audit log", icon: ShieldCheck },
   { to: "/dashboard/admin/activity", label: "Activity explorer", icon: ClipboardList },

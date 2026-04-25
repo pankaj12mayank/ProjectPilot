@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from app.config.settings import get_settings
-from app.db.models import Project, ProjectFile, ProjectReportRun, User
+from app.db.models import Project, ProjectFile, ProjectMetricsSnapshot, ProjectReportRun, User
 from app.db.session import get_db
 from app.deps.auth import get_current_user
 from app.deps.project import fetch_deletable_project, get_accessible_project, get_owned_project
@@ -334,7 +334,7 @@ def list_metrics_snapshots(
     db: Session = Depends(get_db),
     limit: int = Query(50, ge=1, le=200),
 ) -> list[MetricsSnapshotListItem]:
-    """Stored metrics snapshots for this project (DB + mirror files under outputs/snapshots/{project_id}/)."""
+    """Stored metrics snapshots for this project (download JSON via …/snapshots/{id}/download)."""
     rows = list_project_metrics_snapshots(db, project.id, limit=limit)
     return [
         MetricsSnapshotListItem(
@@ -346,6 +346,30 @@ def list_metrics_snapshots(
         )
         for r in rows
     ]
+
+
+@router.get("/{project_id}/metrics/snapshots/{snapshot_id}/download")
+def download_metrics_snapshot(
+    snapshot_id: str,
+    project: Project = Depends(get_accessible_project),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Stream the snapshot JSON for this project (same data as stored in the database)."""
+    row = db.get(ProjectMetricsSnapshot, snapshot_id)
+    if row is None or row.project_id != project.id:
+        raise HTTPException(status_code=404, detail="Snapshot not found for this project")
+    raw = row.metrics_json if row.metrics_json and str(row.metrics_json).strip() else "{}"
+    created = row.created_at
+    if created is not None:
+        ts = created.astimezone(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    else:
+        ts = "snapshot"
+    fname = f"metrics-snapshot-{ts}-{row.id[:8]}.json"
+    return Response(
+        content=raw if isinstance(raw, str) else str(raw),
+        media_type="application/json; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
 
 
 @router.post("/{project_id}/metrics/snapshot", response_model=MetricsSnapshotOut)

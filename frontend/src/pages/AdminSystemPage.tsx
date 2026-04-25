@@ -141,6 +141,10 @@ export default function AdminSystemPage() {
                 <CardDescription>Branding and filesystem roots.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
+                <Row
+                  label="Transactional email"
+                  value={cfg.email_send_ready ? "Ready to send" : cfg.email_send_status}
+                />
                 <Row label="PUBLIC_API_URL" value={cfg.public_api_url || "—"} />
                 <Row label="PUBLIC_APP_URL" value={cfg.public_app_url || "—"} />
                 <Row label="Repo root" value={cfg.paths.repo_root} multiline />

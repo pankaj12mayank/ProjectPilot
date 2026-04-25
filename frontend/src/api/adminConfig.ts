@@ -23,6 +23,8 @@ export type AdminSystemConfigOut = {
     uploads_dir: string;
   };
   dev_return_reset_token: boolean;
+  email_send_ready: boolean;
+  email_send_status: string;
 };
 
 export async function fetchAdminSystemConfig(): Promise<AdminSystemConfigOut> {

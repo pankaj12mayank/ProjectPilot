@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
@@ -22,7 +23,7 @@ from app.security import (
     create_refresh_token,
     decode_refresh_token,
 )
-from app.services import event_log_service, user_service
+from app.services import branding_service, email_service, event_log_service, user_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -121,11 +122,33 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)) 
         logger.info("Password reset requested for %s", body.email)
         if settings.dev_return_reset_token:
             dev_token = token
-        base = (settings.public_app_url or "").strip().rstrip("/")
+        branding_row = branding_service.get_or_create(db)
+        base = (branding_row.public_app_url or settings.public_app_url or "").strip().rstrip("/")
         if dev_token and base:
-            from urllib.parse import quote
-
             reset_link = f"{base}/reset-password?token={quote(dev_token, safe='')}"
+        email_link = f"{base}/reset-password?token={quote(token, safe='')}" if base else ""
+        if email_link:
+            try:
+                product = (branding_row.product_name or "ProjectPilot").strip() or "ProjectPilot"
+                send_res = email_service.EmailService(settings, db).send_password_reset_email(
+                    to_email=user.email,
+                    user_name=user.full_name or "",
+                    reset_link=email_link,
+                    product_name=product,
+                )
+                if not send_res.ok:
+                    logger.warning(
+                        "Password reset email not delivered for %s (token still valid): %s",
+                        body.email,
+                        send_res.message,
+                    )
+            except Exception:
+                logger.exception("Password reset email crashed for %s (token still valid)", body.email)
+        else:
+            logger.info(
+                "Password reset email skipped (set public app URL in Admin → Branding or PUBLIC_APP_URL) for %s",
+                body.email,
+            )
     return ForgotPasswordResponse(
         message="If an account exists for that email, password reset instructions have been recorded.",
         dev_reset_token=dev_token,

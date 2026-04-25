@@ -40,7 +40,7 @@ export default function ProjectReportsHistoryPage() {
     return (
       <Card title="Report history">
         <p className="pp-field__error">{error}</p>
-        <Link to={`/dashboard/projects/${projectId}/reports`}>Back to downloads</Link>
+        <Link to={`/dashboard/projects/${projectId}/reports`}>Back to reports</Link>
       </Card>
     );
   }
@@ -55,9 +55,12 @@ export default function ProjectReportsHistoryPage() {
           </Link>
         }
       >
-        <p className="pp-muted">Last 50 generation jobs for this project. Open downloads for a job to fetch files.</p>
+        <p className="pp-muted">
+          Last 50 report runs for this project. Pick a row to open that run and <strong>Download now</strong> for each
+          file you need—everything is saved directly in your browser.
+        </p>
         {rows.length === 0 ? (
-          <p className="pp-muted">No reports yet — generate one from the download page.</p>
+          <p className="pp-muted">No reports yet — generate one from the project&apos;s Reports page.</p>
         ) : (
           <Table<ReportRunSummary>
             columns={[
@@ -69,7 +72,7 @@ export default function ProjectReportsHistoryPage() {
                 header: "",
                 render: (r) => (
                   <Link className="pp-btn pp-btn--secondary pp-btn--sm" to={`/dashboard/projects/${projectId}/reports?jobId=${r.job_id}`}>
-                    Downloads
+                    Download files
                   </Link>
                 ),
               },

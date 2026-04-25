@@ -16,7 +16,13 @@ import {
   YAxis,
 } from "recharts";
 import { fetchProjectHealth, type ProjectHealthResponse } from "../api/analytics";
-import { fetchProjectMetricsSnapshots, recordProjectMetricsSnapshot, type MetricsSnapshotListItem } from "../api/projects";
+import {
+  downloadProjectMetricsSnapshot,
+  fetchProjectMetricsSnapshots,
+  previewProjectMetricsSnapshot,
+  recordProjectMetricsSnapshot,
+  type MetricsSnapshotListItem,
+} from "../api/projects";
 import { useToast } from "../components/ToastProvider";
 import { friendlyErrorMessage } from "@/lib/friendlyMessages";
 import { KpiCard } from "../components/KpiCard";
@@ -185,9 +191,8 @@ export default function ProjectHealthPage() {
     setSnapshotMsg(null);
     setSnapshotBusy(true);
     try {
-      const r = await recordProjectMetricsSnapshot(projectId);
-      const msg = `Snapshot saved (${r.snapshot_id.slice(0, 8)}…). Stored under outputs/snapshots/${projectId}/ on the server.`;
-      setSnapshotMsg(msg);
+      await recordProjectMetricsSnapshot(projectId);
+      setSnapshotMsg("Snapshot saved. You can download it from the history below, or open Reports for PDFs and other files.");
       toast.push("success", "Metrics snapshot saved. It appears in the history below.");
       setSnapshotListNonce((n) => n + 1);
     } catch (e) {
@@ -281,10 +286,18 @@ export default function ProjectHealthPage() {
         <RagBanner rag={data.rag} />
       </Card>
 
-      <Card title="Snapshot history">
+      <Card className="w-full border-primary/25 bg-gradient-to-br from-card to-muted/25 shadow-md" title="Snapshot history">
+        <div
+          className="mb-4 rounded-md border border-border/80 bg-muted/35 px-4 py-3 text-sm text-foreground backdrop-blur-sm dark:bg-muted/25"
+          role="note"
+        >
+          <strong className="font-semibold">For your records:</strong> each snapshot is a point-in-time copy of the
+          metrics on this page. Use <strong>Download now</strong> to save the JSON to your computer, or{" "}
+          <strong>View</strong> to open a read-only preview. For PDFs, Word, PowerPoint, and other report files, open the
+          linked report run on the Reports page—everything is delivered through the app, not via server folders.
+        </div>
         <p className="pp-muted" style={{ marginTop: 0 }}>
-          Each row is a metrics capture for this project (timestamp + source). Files are mirrored under{" "}
-          <code>outputs/snapshots/&lt;project_id&gt;/</code> on the API server.
+          After you use <strong>Record portfolio snapshot</strong>, new rows appear here right away.
         </p>
         {snapshotsError ? (
           <p className="pp-field__error" role="alert">
@@ -300,10 +313,11 @@ export default function ProjectHealthPage() {
             <table className="pp-table">
               <thead>
                 <tr>
-                  <th>Time (UTC)</th>
+                  <th>Time</th>
                   <th>Source</th>
-                  <th>Report job</th>
-                  <th>Snapshot id</th>
+                  <th>Report files</th>
+                  <th>Snapshot</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,15 +327,57 @@ export default function ProjectHealthPage() {
                     <td>{sourceLabel(s.source)}</td>
                     <td>
                       {s.report_run_id ? (
-                        <Link to={`/dashboard/projects/${projectId}/reports?jobId=${encodeURIComponent(s.report_run_id)}`}>
-                          <code>{s.report_run_id.slice(0, 8)}…</code>
+                        <Link
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                          to={`/dashboard/projects/${projectId}/reports?jobId=${encodeURIComponent(s.report_run_id)}`}
+                        >
+                          Download report files
                         </Link>
                       ) : (
-                        "—"
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </td>
                     <td>
-                      <code>{s.snapshot_id.slice(0, 8)}…</code>
+                      <code className="text-xs">{s.snapshot_id.slice(0, 8)}…</code>
+                    </td>
+                    <td>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() =>
+                            void (async () => {
+                              try {
+                                await downloadProjectMetricsSnapshot(projectId, s.snapshot_id);
+                                toast.push("success", "Download started.");
+                              } catch (e) {
+                                toast.push("error", friendlyErrorMessage(e, "Download failed."));
+                              }
+                            })()
+                          }
+                        >
+                          Download now
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() =>
+                            void (async () => {
+                              try {
+                                await previewProjectMetricsSnapshot(projectId, s.snapshot_id);
+                              } catch (e) {
+                                toast.push("error", friendlyErrorMessage(e, "Could not open preview."));
+                              }
+                            })()
+                          }
+                        >
+                          View
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

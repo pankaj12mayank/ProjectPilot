@@ -238,6 +238,31 @@ class GovernanceRun(Base):
     email_path: Mapped[str] = mapped_column(Text)
 
 
+class EmailSettings(Base):
+    """Singleton row (id=`default`) for transactional email (SMTP, SendGrid, …)."""
+
+    __tablename__ = "email_settings"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    #: Provider slug: `smtp` | `sendgrid` (extensible).
+    provider: Mapped[str] = mapped_column(String(32), default="smtp")
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    smtp_host: Mapped[str] = mapped_column(String(255), default="")
+    smtp_port: Mapped[int] = mapped_column(Integer, default=587)
+    use_tls: Mapped[bool] = mapped_column(Boolean, default=True)
+    use_ssl: Mapped[bool] = mapped_column(Boolean, default=False)
+    smtp_user: Mapped[str] = mapped_column(String(255), default="")
+    smtp_password_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    from_email: Mapped[str] = mapped_column(String(255), default="")
+    from_name: Mapped[str] = mapped_column(String(200), default="ProjectPilot")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_by_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+
+
 class BrandingSettings(Base):
     """Singleton row (id=`default`) for platform branding and public URL hints."""
 

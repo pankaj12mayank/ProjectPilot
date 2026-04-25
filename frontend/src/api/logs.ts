@@ -83,6 +83,8 @@ export async function fetchActivityLogsPaged(q: ActivityLogQuery = {}): Promise<
 
 export type AdminActivityLogQuery = ActivityLogQuery & {
   actor_user_id?: string;
+  /** Cache-bust timestamp (ignored by API). */
+  _?: string | number;
 };
 
 /** Platform admins: all activity, or narrow with actor_user_id. */

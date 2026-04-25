@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LogOut, Menu, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, Menu, UserRound } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import {
@@ -107,13 +107,14 @@ export function AppHeader({ onMenu }: { onMenu: () => void }) {
         <ThemeToggle variant="icon" className="shrink-0 rounded-xl border-border/80" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className={cn("gap-2 rounded-xl border-border/80", "shrink-0")}>
+            <Button variant="outline" size="sm" className={cn("gap-2 rounded-md border-border/80 pr-2", "shrink-0")}>
               {avatarSrc ? (
                 <img src={avatarSrc} alt="" className="size-7 rounded-full object-cover ring-1 ring-border" />
               ) : (
-                <UserRound className="size-4 opacity-80" />
+                <UserRound className="size-4 shrink-0 opacity-80" />
               )}
               <span className="max-w-[10rem] truncate text-left text-sm font-medium">{user?.full_name}</span>
+              <ChevronDown className="size-4 shrink-0 opacity-70" aria-hidden />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">

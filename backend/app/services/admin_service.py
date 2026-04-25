@@ -108,6 +108,8 @@ def admin_dashboard_stats(db: Session, viewer: User) -> dict[str, object]:
 
     return {
         **base,
+        "stats_computed_at": now.isoformat(),
+        "audit_events_window_days": 7,
         "inactive_projects": inactive_projects,
         "users_active": users_active,
         "users_inactive": users_inactive,

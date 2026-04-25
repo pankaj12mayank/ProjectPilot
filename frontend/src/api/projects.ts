@@ -247,6 +247,52 @@ export async function fetchProjectMetricsSnapshots(
   return readJsonOk<MetricsSnapshotListItem[]>(res);
 }
 
+/** Saves the metrics snapshot JSON from the API to the user's device (no server folder access needed). */
+export async function downloadProjectMetricsSnapshot(projectId: string, snapshotId: string): Promise<void> {
+  const enc = encodeURIComponent(projectId);
+  const sid = encodeURIComponent(snapshotId);
+  const res = await apiFetch(`/projects/${enc}/metrics/snapshots/${sid}/download`);
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(t || `Download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get("Content-Disposition");
+  let name = `metrics-snapshot-${snapshotId.slice(0, 8)}.json`;
+  const m = cd?.match(/filename="?([^";]+)"?/i);
+  if (m?.[1]) name = m[1];
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Opens a new tab with a formatted preview of the snapshot JSON. */
+export async function previewProjectMetricsSnapshot(projectId: string, snapshotId: string): Promise<void> {
+  const enc = encodeURIComponent(projectId);
+  const sid = encodeURIComponent(snapshotId);
+  const res = await apiFetch(`/projects/${enc}/metrics/snapshots/${sid}/download`);
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(t || `Could not load snapshot (${res.status})`);
+  }
+  const text = await res.text();
+  let pretty = text;
+  try {
+    pretty = JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    /* keep raw */
+  }
+  const blob = new Blob([pretty], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export type ProjectRiskOut = {
   id: string;
   project_id: string;

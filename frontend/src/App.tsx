@@ -39,6 +39,7 @@ const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 const AdminBrandingPage = lazy(() => import("./pages/AdminBrandingPage"));
 const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
 const AdminSystemPage = lazy(() => import("./pages/AdminSystemPage"));
+const AdminEmailPage = lazy(() => import("./pages/AdminEmailPage"));
 const AdminActivityPage = lazy(() => import("./pages/AdminActivityPage"));
 
 function AuthShell() {
@@ -314,6 +315,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <AdminSystemPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/email"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminEmailPage />
                 </Suspense>
               }
             />

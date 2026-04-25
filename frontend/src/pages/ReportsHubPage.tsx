@@ -50,8 +50,8 @@ function ReportWorkspaceCard({
         <CardTitle className="text-base">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
+      <CardContent className="flex w-full flex-col gap-4">
+        <div className="w-full space-y-2">
           <label htmlFor={`report-pick-${kind}`} className="text-sm font-medium text-foreground">
             Project
           </label>
@@ -196,7 +196,7 @@ export default function ReportsHubPage() {
                   <span className="text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
                   <Button asChild variant="link" className="h-auto p-0 text-primary">
                     <Link to={`/dashboard/projects/${r.project_id}/reports?jobId=${encodeURIComponent(r.job_id)}`}>
-                      Open downloads
+                      Download files
                     </Link>
                   </Button>
                 </li>

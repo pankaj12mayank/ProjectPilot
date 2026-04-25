@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { Button } from "./Button";
 
 export function Modal({
@@ -36,8 +37,8 @@ export function Modal({
       >
         <header className="pp-modal__header">
           <h2 id="pp-modal-title">{title}</h2>
-          <Button variant="ghost" type="button" className="pp-modal__close" onClick={onClose} aria-label="Close">
-            ×
+          <Button variant="ghost" type="button" className="pp-modal__close" onClick={onClose} aria-label="Close dialog">
+            <X className="size-5 shrink-0" strokeWidth={2} aria-hidden />
           </Button>
         </header>
         <div className="pp-modal__body">{children}</div>

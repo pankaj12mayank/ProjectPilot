@@ -68,6 +68,8 @@ class Settings(BaseSettings):
     )
     bootstrap_admin_name: str = Field(default="Administrator", validation_alias="BOOTSTRAP_ADMIN_NAME")
     dev_return_reset_token: bool = Field(default=False, validation_alias="DEV_RETURN_RESET_TOKEN")
+    #: Optional Fernet key (urlsafe base64, 32 bytes) for encrypting SMTP passwords in DB. If unset, derived from JWT_SECRET_KEY.
+    email_encryption_key: str | None = Field(default=None, validation_alias="EMAIL_ENCRYPTION_KEY")
 
     public_api_url: str | None = Field(default=None, validation_alias="PUBLIC_API_URL")
     public_app_url: str | None = Field(default=None, validation_alias="PUBLIC_APP_URL")

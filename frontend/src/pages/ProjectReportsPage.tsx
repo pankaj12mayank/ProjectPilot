@@ -114,7 +114,7 @@ export default function ProjectReportsPage() {
       setPackageJson(p);
       setJobId(p.job_id);
       setSearchParams({ jobId: p.job_id });
-      toast.push("success", "A new report package was generated. You can download the files below.");
+      toast.push("success", "A new report package is ready. Use Download now for each file you want to save.");
     } catch (e) {
       const msg = friendlyErrorMessage(e, "Report generation failed.");
       setError(msg);
@@ -129,7 +129,7 @@ export default function ProjectReportsPage() {
     setDlError(null);
     try {
       await downloadReportArtifact(projectId, activeJob, filename);
-      toast.push("success", `Download started: ${filename}`);
+      toast.push("success", `Saving: ${filename}`);
     } catch (e) {
       const msg = friendlyErrorMessage(e, "Download failed.");
       setDlError(msg);
@@ -195,7 +195,7 @@ export default function ProjectReportsPage() {
       ) : null}
 
       <Card
-        title="Download reports"
+        title="Reports & downloads"
         actions={
           <div className="pp-row-actions">
             <Link
@@ -219,9 +219,9 @@ export default function ProjectReportsPage() {
         {healthLoading ? <p className="pp-muted">Loading project…</p> : null}
         {historyError ? <p className="pp-field__error">{historyError}</p> : null}
         <p className="pp-muted">
-          Generates PowerPoint, PDF, DOCX, Markdown, and email draft from <strong>live ingested data</strong> for this
-          project. When you already have data, the latest report job is selected automatically so you do not need to
-          re-upload files.
+          Build PowerPoint, PDF, Word, Markdown, and a plain-text email draft from your <strong>validated project data</strong>.
+          When data is already on file, the latest report run is selected for you—no need to upload again to get fresh
+          files.
         </p>
         {error ? <p className="pp-field__error">{error}</p> : null}
         {dlError ? <p className="pp-field__error">{dlError}</p> : null}
@@ -238,8 +238,12 @@ export default function ProjectReportsPage() {
       </Card>
 
       {activeJob && !showUploadGate ? (
-        <Card title="Download files">
-          <p className="pp-muted">If a format failed server-side, that download may return an error — try another format.</p>
+        <Card title="Save files to your computer">
+          <p className="pp-muted">
+            You do not need access to any server folder. Each <strong>Download now</strong> button saves that file
+            straight to your device (your browser may ask where to save). If a format failed during generation, that row
+            stays disabled—try another format.
+          </p>
           <div className="pp-report-dl-grid">
             {REPORT_ARTIFACTS.map(({ filename, label }) => {
               const pathKey = pathKeyForArtifact(filename);
@@ -255,7 +259,7 @@ export default function ProjectReportsPage() {
                     disabled={!ok}
                     onClick={() => void handleDownload(filename)}
                   >
-                    Download
+                    Download now
                   </Button>
                 </div>
               );

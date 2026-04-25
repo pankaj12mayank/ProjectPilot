@@ -184,6 +184,27 @@ code {
   font-weight: 400;
   line-height: 1.45;
 }
+
+/* Native <select> — explicit surface + chevron everywhere (fixes Windows light-blue chrome) */
+select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  max-width: 100%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b5d52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.25rem;
+}
+.dark select:not([multiple]) {
+  color-scheme: dark;
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c4b5a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
 .pp-input:focus {
   outline: 2px solid transparent;
   box-shadow: 0 0 0 3px hsl(var(--focus-ring) / var(--focus-ring-opacity));
@@ -857,8 +878,9 @@ code {
 .pp-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgb(15 23 42 / 0.45);
-  backdrop-filter: blur(6px);
+  background: hsl(28 22% 18% / 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -867,7 +889,7 @@ code {
   animation: pp-modal-backdrop-in 0.2s ease-out;
 }
 .dark .pp-modal-backdrop {
-  background: rgb(0 0 0 / 0.55);
+  background: hsl(22 25% 4% / 0.58);
 }
 
 @keyframes pp-modal-backdrop-in {
@@ -880,21 +902,34 @@ code {
 }
 
 .pp-modal {
-  background: rgb(255 255 255 / 0.92);
-  border: 1px solid var(--pp-border);
-  border-radius: var(--pp-radius);
+  --pp-modal-r: calc(var(--radius, 14px) + 8px);
+  background: hsl(var(--card) / 0.96);
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--pp-modal-r);
   max-width: 480px;
   width: 100%;
   max-height: 90vh;
-  overflow: auto;
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.2), inset 0 1px 0 0 rgb(255 255 255 / 0.8);
-  backdrop-filter: blur(12px);
-  animation: pp-modal-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 0 0 1px hsl(var(--ring) / 0.08),
+    0 4px 24px hsl(24 22% 8% / 0.08),
+    0 28px 64px -16px hsl(24 18% 10% / 0.18),
+    inset 0 1px 0 0 hsl(0 0% 100% / 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  animation: pp-modal-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .dark .pp-modal {
-  background: rgb(17 24 39 / 0.88);
-  border-color: var(--pp-border);
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.55), inset 0 1px 0 0 rgb(248 250 252 / 0.06);
+  background: hsl(var(--card) / 0.94);
+  border-color: hsl(var(--border));
+  box-shadow:
+    0 0 0 1px hsl(var(--ring) / 0.12),
+    0 8px 40px hsl(0 0% 0% / 0.45),
+    0 36px 72px -20px hsl(0 0% 0% / 0.55),
+    inset 0 1px 0 0 hsl(40 24% 96% / 0.05);
 }
 
 @keyframes pp-modal-in {
@@ -912,30 +947,84 @@ code {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--pp-border);
+  gap: 0.75rem;
+  padding: 1.1rem 1.35rem 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  background: linear-gradient(180deg, hsl(var(--muted) / 0.22) 0%, transparent 100%);
+  flex-shrink: 0;
 }
 .pp-modal__header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-family: var(--font-display, "Plus Jakarta Sans", system-ui, sans-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+  line-height: 1.3;
 }
 
 .pp-modal__close {
-  font-size: 1.5rem !important;
-  line-height: 1;
-  padding: 0.25rem 0.5rem !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.375rem;
+  min-height: 2.375rem;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground)) !important;
+}
+.pp-modal__close:hover:not(:disabled) {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
 }
 
 .pp-modal__body {
-  padding: 1.25rem;
+  padding: 1.35rem 1.35rem 1.25rem;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.pp-modal__body .pp-form {
+  gap: 1.1rem;
+}
+
+.pp-modal .pp-input,
+.pp-modal select.pp-input {
+  border-radius: calc(var(--radius, 14px) * 0.85);
+  border-color: hsl(var(--input));
+  background-color: hsl(var(--background));
+  box-shadow: inset 0 1px 2px hsl(24 22% 8% / 0.04);
+}
+.dark .pp-modal .pp-input,
+.dark .pp-modal select.pp-input {
+  background-color: hsl(var(--muted) / 0.35);
+  box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.2);
 }
 
 .pp-modal__footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--pp-border);
+  padding: 1rem 1.35rem 1.15rem;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.2);
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+.dark .pp-modal__footer {
+  background: hsl(22 10% 10% / 0.55);
+}
+
+.pp-modal__footer .pp-btn {
+  border-radius: calc(var(--radius, 14px) * 0.75);
+  min-height: 2.5rem;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
 }
 
 .pp-check {
@@ -1256,12 +1345,18 @@ code {
 }
 .pp-toast {
   padding: 0.75rem 1rem;
-  border-radius: var(--pp-radius);
-  box-shadow: var(--pp-shadow);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px hsl(24 22% 6% / 0.18);
   font-size: 0.9rem;
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card) / 0.92);
+  border: 1px solid hsl(var(--border) / 0.85);
   color: hsl(var(--card-foreground));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .pp-toast {
+  background: hsl(var(--card) / 0.88);
+  box-shadow: 0 16px 48px hsl(0 0% 0% / 0.35);
 }
 .pp-toast--success {
   border-color: hsl(var(--rag-green) / 0.55);

@@ -11,8 +11,15 @@ from app.db.models import User
 from app.db.session import get_db
 from app.deps.auth import require_admin
 from app.schemas.branding import BrandingAdminOut, BrandingPublicOut, BrandingUpdateIn, BrandingUploadOut
+from app.schemas.email_settings import (
+    EmailSettingsAdminOut,
+    EmailSettingsPostIn,
+    EmailSettingsUpdateIn,
+    EmailTestIn,
+    EmailTestOut,
+)
 from app.schemas.logs import ActivityLogOut, PaginatedActivityLogsOut
-from app.services import admin_service, branding_service
+from app.services import admin_service, branding_service, email_service, email_settings_service, event_log_service
 from app.services.logs_list_service import LogQuery, list_activity_logs_admin
 
 router = APIRouter()
@@ -38,12 +45,23 @@ def admin_stats(admin: User = Depends(require_admin), db: Session = Depends(get_
 
 
 @router.get("/system-config")
-def admin_system_config(_: User = Depends(require_admin)) -> dict[str, Any]:
+def admin_system_config(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
     """Read-only snapshot of effective server configuration (no secrets)."""
     s = get_settings()
     uri = s.sqlalchemy_database_uri
     db_kind = "postgresql" if "postgresql" in uri.lower() else "sqlite" if "sqlite" in uri.lower() else "other"
     secret = (s.jwt_secret_key or "").strip()
+    email_row = email_settings_service.get_or_create(db)
+    email_gap = None
+    if email_row.enabled:
+        prov = (email_row.provider or "smtp").lower()
+        if prov == "sendgrid":
+            email_gap = email_settings_service.describe_sendgrid_gap(email_row, s)
+        else:
+            email_gap = email_settings_service.describe_ready_gap(email_row, s)
     return {
         "api_prefix": s.api_prefix,
         "cors_origins": s.cors_origins,
@@ -67,6 +85,8 @@ def admin_system_config(_: User = Depends(require_admin)) -> dict[str, Any]:
             "uploads_dir": str(s.uploads_dir),
         },
         "dev_return_reset_token": bool(s.dev_return_reset_token),
+        "email_send_ready": (not email_row.enabled) or (email_gap is None),
+        "email_send_status": "disabled" if not email_row.enabled else ("ready" if email_gap is None else email_gap),
     }
 
 
@@ -226,3 +246,100 @@ def admin_delete_branding_asset(
             "max_upload_mb": settings.branding_max_upload_mb,
         },
     )
+
+
+@router.get("/email-settings", response_model=EmailSettingsAdminOut)
+def admin_get_email_settings(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> EmailSettingsAdminOut:
+    row = email_settings_service.get_or_create(db)
+    return email_settings_service.to_admin_out(row)
+
+
+@router.post("/email-settings", response_model=EmailSettingsAdminOut)
+def admin_post_email_settings(
+    request: Request,
+    body: EmailSettingsPostIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> EmailSettingsAdminOut:
+    settings = get_settings()
+    row = email_settings_service.get_or_create(db)
+    try:
+        email_settings_service.apply_post(
+            db,
+            row=row,
+            body=body,
+            settings=settings,
+            actor_user_id=admin.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    row = email_settings_service.get_or_create(db)
+    event_log_service.write_audit(
+        db,
+        actor_user_id=admin.id,
+        action="admin.email_settings.post",
+        entity_type="email_settings",
+        entity_id="default",
+        detail={"provider": body.provider, "enabled": body.enabled},
+        ip_address=_client_ip(request),
+    )
+    return email_settings_service.to_admin_out(row)
+
+
+@router.patch("/email-settings", response_model=EmailSettingsAdminOut)
+def admin_patch_email_settings(
+    request: Request,
+    body: EmailSettingsUpdateIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> EmailSettingsAdminOut:
+    if not body.model_fields_set:
+        row = email_settings_service.get_or_create(db)
+        return email_settings_service.to_admin_out(row)
+    settings = get_settings()
+    row = email_settings_service.get_or_create(db)
+    try:
+        email_settings_service.apply_update(
+            db,
+            row=row,
+            body=body,
+            settings=settings,
+            actor_user_id=admin.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    row = email_settings_service.get_or_create(db)
+    event_log_service.write_audit(
+        db,
+        actor_user_id=admin.id,
+        action="admin.email_settings.patch",
+        entity_type="email_settings",
+        entity_id="default",
+        detail={"fields": sorted(body.model_fields_set)},
+        ip_address=_client_ip(request),
+    )
+    return email_settings_service.to_admin_out(row)
+
+
+@router.post("/email-settings/test", response_model=EmailTestOut)
+def admin_post_email_settings_test(
+    request: Request,
+    body: EmailTestIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> EmailTestOut:
+    settings = get_settings()
+    res = email_service.EmailService(settings, db).send_test_email(to_email=str(body.to))
+    event_log_service.write_audit(
+        db,
+        actor_user_id=admin.id,
+        action="admin.email_settings.test",
+        entity_type="email_settings",
+        entity_id="default",
+        detail={"to": str(body.to), "ok": res.ok, "message": res.message[:500]},
+        ip_address=_client_ip(request),
+    )
+    return EmailTestOut(ok=res.ok, message=res.message)

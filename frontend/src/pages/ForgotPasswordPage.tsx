@@ -53,9 +53,8 @@ export default function ForgotPasswordPage() {
     <div className="pp-auth">
       <Card title="Forgot password">
         <p className="pp-muted">
-          Enter your email. If an account exists, a reset is prepared on the server. For local testing, set{" "}
-          <code>DEV_RETURN_RESET_TOKEN=1</code> and <code>PUBLIC_APP_URL</code> (for example your Vite URL) so the
-          response can include a ready-made reset link.
+          Enter the email address you use to sign in. If it matches an account, we&apos;ll email you a link to reset your
+          password. Check your inbox and spam folder—it may take a minute to arrive.
         </p>
         {error ? (
           <p className="pp-field__error" role="alert">
