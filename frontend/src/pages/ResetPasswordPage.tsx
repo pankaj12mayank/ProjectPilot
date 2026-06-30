@@ -6,6 +6,7 @@ import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
 import { PasswordInput } from "../components/ui/PasswordInput";
+import { useToast } from "../components/ToastProvider";
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -16,6 +17,7 @@ export default function ResetPasswordPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -36,9 +38,13 @@ export default function ResetPasswordPage() {
       if (!res.ok) {
         throw new Error(typeof data.detail === "string" ? data.detail : "Reset failed");
       }
-      setMessage(data.message ?? "Password updated.");
+      const successMsg = data.message ?? "Password updated successfully.";
+      setMessage(successMsg);
+      toast.push("success", successMsg);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset failed");
+      const msg = err instanceof Error ? err.message : "Reset failed";
+      setError(msg);
+      toast.push("error", msg);
     } finally {
       setBusy(false);
     }

@@ -1,4 +1,9 @@
-export const termsOfServiceContent = {
+export const termsOfServiceContent: {
+  seo: { title: string; description: string };
+  title: string;
+  updated: string;
+  sections: { heading: string; content: string }[];
+} = {
   seo: {
     title: "Terms of Service \u2014 ProjectPilot",
     description: "ProjectPilot terms of service govern the use of the platform by individuals and organisations.",
@@ -57,4 +62,4 @@ export const termsOfServiceContent = {
         "For questions about these terms, please contact us at support@projectpilot.com.",
     },
   ],
-} as const;
+};

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { postLoginPath } from "../auth/roleUtils";
 import { useBranding } from "../branding/BrandingProvider";
+import { useToast } from "../components/ToastProvider";
 import { validateRegisterForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
@@ -20,6 +21,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -43,9 +45,12 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       const me = await register(email, password, fullName);
+      toast.push("success", "Account created successfully.");
       navigate(postLoginPath(me.role, "/dashboard"), { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      const msg = err instanceof Error ? err.message : "Registration failed";
+      setError(msg);
+      toast.push("error", msg);
     } finally {
       setBusy(false);
     }

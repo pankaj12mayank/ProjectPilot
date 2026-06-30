@@ -1,4 +1,11 @@
-export const footerContent = {
+export const footerContent: {
+  description: string;
+  columns: {
+    title: string;
+    links: { label: string; href: string }[];
+  }[];
+  copyright: string;
+} = {
   description:
     "ProjectPilot gives project and portfolio managers full visibility into governance, risks, and delivery health across every initiative your team runs.",
   columns: [
@@ -27,4 +34,4 @@ export const footerContent = {
     },
   ],
   copyright: `\u00A9 ${new Date().getFullYear()} ProjectPilot. All rights reserved.`,
-} as const;
+};

@@ -1,4 +1,9 @@
-export const privacyPolicyContent = {
+export const privacyPolicyContent: {
+  seo: { title: string; description: string };
+  title: string;
+  updated: string;
+  sections: { heading: string; content: string }[];
+} = {
   seo: {
     title: "Privacy Policy \u2014 ProjectPilot",
     description: "ProjectPilot privacy policy explains how we collect, use, and protect your personal data.",
@@ -47,4 +52,4 @@ export const privacyPolicyContent = {
         "If you have questions about this privacy policy or how your data is handled, please contact us at support@projectpilot.com.",
     },
   ],
-} as const;
+};

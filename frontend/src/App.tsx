@@ -42,6 +42,10 @@ const AdminAuditPage = lazy(() => import("./pages/AdminAuditPage"));
 const AdminSystemPage = lazy(() => import("./pages/AdminSystemPage"));
 const AdminEmailPage = lazy(() => import("./pages/AdminEmailPage"));
 const AdminActivityPage = lazy(() => import("./pages/AdminActivityPage"));
+const AdminPlansPage = lazy(() => import("./pages/AdminPlansPage"));
+const AdminGatewaysPage = lazy(() => import("./pages/AdminGatewaysPage"));
+const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
+const AdminSubscriptionsPage = lazy(() => import("./pages/AdminSubscriptionsPage"));
 
 const HomePage = lazy(() => import("./landing/pages/HomePage"));
 const FeaturesPage = lazy(() => import("./landing/pages/FeaturesPage"));
@@ -283,6 +287,15 @@ export default function App() {
             }
           />
 
+          <Route
+            path="subscription"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <SubscriptionPage />
+              </Suspense>
+            }
+          />
+
           <Route element={<RequireRole roles={["admin", "system_owner"]} />}>
             <Route
               path="admin"
@@ -337,6 +350,30 @@ export default function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <AdminEmailPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/plans"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminPlansPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/gateways"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminGatewaysPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/subscriptions"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminSubscriptionsPage />
                 </Suspense>
               }
             />

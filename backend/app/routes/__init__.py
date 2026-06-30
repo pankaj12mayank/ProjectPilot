@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.routes import admin, auth, branding, governance, health, logs, portfolio, projects, users
+from app.routes import admin, auth, branding, contact, governance, health, logs, plans, portfolio, projects, subscriptions, users
 
 
 def build_api_router() -> APIRouter:
@@ -13,5 +13,8 @@ def build_api_router() -> APIRouter:
     api.include_router(logs.router, prefix="/logs", tags=["logs"])
     api.include_router(governance.router, prefix="/governance", tags=["governance"])
     api.include_router(branding.router, prefix="/branding", tags=["branding"])
+    api.include_router(contact.router, prefix="/contact", tags=["contact"])
+    api.include_router(plans.router, prefix="/plans", tags=["plans"])
+    api.include_router(subscriptions.router, prefix="/subscription", tags=["subscription"])
     api.include_router(admin.router, prefix="/admin", tags=["admin"])
     return api

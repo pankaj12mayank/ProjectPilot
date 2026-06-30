@@ -5,11 +5,13 @@ import { fetchProject, type ProjectOut } from "../api/projects";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { FormField } from "../components/ui/FormField";
+import { useToast } from "../components/ToastProvider";
 
 export default function GovernanceReportPage() {
   const [searchParams] = useSearchParams();
   const projectId = (searchParams.get("projectId") || "").trim();
 
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -76,8 +78,11 @@ export default function GovernanceReportPage() {
       }
       const data = tryParseJson<Record<string, unknown>>(text);
       setResult(data ?? {});
+      toast.push("success", "Governance report generated successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      setError(msg);
+      toast.push("error", msg);
     } finally {
       setBusy(false);
     }

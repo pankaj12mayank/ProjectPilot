@@ -1,4 +1,9 @@
-export const cookiePolicyContent = {
+export const cookiePolicyContent: {
+  seo: { title: string; description: string };
+  title: string;
+  updated: string;
+  sections: { heading: string; content: string }[];
+} = {
   seo: {
     title: "Cookie Policy \u2014 ProjectPilot",
     description: "ProjectPilot cookie policy explains how and why we use cookies on our platform.",
@@ -37,4 +42,4 @@ export const cookiePolicyContent = {
         "If you have questions about our use of cookies, please contact us at support@projectpilot.com.",
     },
   ],
-} as const;
+};

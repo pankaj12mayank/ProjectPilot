@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import {
   Activity,
   ClipboardList,
+  CreditCard,
   FileStack,
   FolderKanban,
   LayoutDashboard,
@@ -40,6 +41,7 @@ const primaryNav: NavItem[] = [
   { to: "/dashboard/reports", label: "Reports", icon: ScrollText },
   { to: "/dashboard/risks", label: "Risks", icon: Shield },
   { to: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles },
+  { to: "/dashboard/subscription", label: "Subscription", icon: CreditCard },
   { to: "/dashboard/logs", label: "Activity & logs", icon: ClipboardList },
   { to: "/dashboard/templates", label: "Templates", icon: FileStack },
 ];
@@ -51,7 +53,10 @@ const adminNav: NavItem[] = [
   { to: "/dashboard/admin/users", label: "Users & roles", icon: Users },
   { to: "/dashboard/admin/audit", label: "Audit log", icon: ShieldCheck },
   { to: "/dashboard/admin/activity", label: "Activity explorer", icon: ClipboardList },
-  { to: "/dashboard/admin/system", label: "System", icon: Wrench },
+  { to: "/dashboard/admin/plans", label: "Plans", icon: CreditCard },
+  { to: "/dashboard/admin/gateways", label: "Payment gateways", icon: Wrench },
+  { to: "/dashboard/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
+  { to: "/dashboard/admin/system", label: "System", icon: Settings },
 ];
 
 function NavButton({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {

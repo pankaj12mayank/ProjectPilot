@@ -1,4 +1,13 @@
-export const pricingContent = {
+export const pricingContent: {
+  seo: { title: string; description: string };
+  headline: string;
+  subheadline: string;
+  plans: {
+    name: string; price: string; period: string; description: string;
+    features: string[]; cta: { text: string; href: string }; highlighted: boolean;
+  }[];
+  faq: { q: string; a: string }[];
+} = {
   seo: {
     title: "Pricing \u2014 ProjectPilot",
     description:
@@ -74,4 +83,4 @@ export const pricingContent = {
       a: "Yes. Contact our sales team with proof of eligibility, and we will apply a discount to any plan.",
     },
   ],
-} as const;
+};

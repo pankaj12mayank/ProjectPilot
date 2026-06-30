@@ -5,6 +5,7 @@ import { validateEmail } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Card } from "../components/ui/Card";
+import { useToast } from "../components/ToastProvider";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [devToken, setDevToken] = useState<string | null>(null);
   const [resetLink, setResetLink] = useState<string | null>(null);
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -39,11 +41,15 @@ export default function ForgotPasswordPage() {
       if (!res.ok) {
         throw new Error(typeof data.detail === "string" ? data.detail : "Request failed");
       }
-      setMessage(data.message ?? "Request received.");
+      const successMsg = data.message ?? "If that email is registered, you'll receive a reset link shortly.";
+      setMessage(successMsg);
+      toast.push("success", successMsg);
       if (data.dev_reset_token) setDevToken(data.dev_reset_token);
       if (data.reset_link) setResetLink(data.reset_link);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setError(msg);
+      toast.push("error", msg);
     } finally {
       setBusy(false);
     }

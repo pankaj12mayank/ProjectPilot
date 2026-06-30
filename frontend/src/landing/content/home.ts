@@ -1,4 +1,27 @@
-export const homeContent = {
+export const homeContent: {
+  seo: { title: string; description: string };
+  hero: {
+    headline: string;
+    subheadline: string;
+    cta: { text: string; href: string };
+    secondaryCta: { text: string; href: string };
+  };
+  stats: { value: string; label: string }[];
+  features: {
+    headline: string;
+    items: { title: string; description: string }[];
+  };
+  workflow: {
+    headline: string;
+    steps: { number: string; title: string; description: string }[];
+  };
+  cta: {
+    headline: string;
+    subheadline: string;
+    buttonText: string;
+    buttonHref: string;
+  };
+} = {
   seo: {
     title: "ProjectPilot \u2014 Project Governance & Portfolio Management Platform",
     description:
@@ -86,4 +109,4 @@ export const homeContent = {
     buttonText: "Create Your Free Account",
     buttonHref: "/register",
   },
-} as const;
+};

@@ -1,4 +1,20 @@
-export const workflowContent = {
+export const workflowContent: {
+  seo: { title: string; description: string };
+  headline: string;
+  subheadline: string;
+  steps: {
+    number: string;
+    title: string;
+    description: string;
+    details: string[];
+  }[];
+  cta: {
+    headline: string;
+    subheadline: string;
+    buttonText: string;
+    buttonHref: string;
+  };
+} = {
   seo: {
     title: "How It Works \u2014 ProjectPilot",
     description:
@@ -59,4 +75,4 @@ export const workflowContent = {
     buttonText: "Get Started Free",
     buttonHref: "/register",
   },
-} as const;
+};

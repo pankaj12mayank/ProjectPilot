@@ -1,4 +1,12 @@
-export const featuresContent = {
+export const featuresContent: {
+  seo: { title: string; description: string };
+  headline: string;
+  subheadline: string;
+  categories: {
+    title: string;
+    items: { name: string; description: string }[];
+  }[];
+} = {
   seo: {
     title: "Features \u2014 ProjectPilot",
     description:
@@ -109,4 +117,4 @@ export const featuresContent = {
       ],
     },
   ],
-} as const;
+};

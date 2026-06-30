@@ -11,6 +11,7 @@ import {
 import { useAuth } from "../auth/AuthContext";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { FormField } from "../components/ui/FormField";
 import { PageLoader } from "../components/PageLoader";
 import { useToast } from "../components/ToastProvider";
@@ -39,6 +40,7 @@ export default function ProjectDetailPage() {
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const loadAssignable = useCallback(async () => {
     try {
@@ -126,10 +128,7 @@ export default function ProjectDetailPage() {
 
   async function handleDelete() {
     if (!projectId || !project) return;
-    const ok = window.confirm(
-      `Permanently delete project "${project.name}"? This removes uploads, ingested rows, and generated reports.`,
-    );
-    if (!ok) return;
+    setShowConfirmDelete(false);
     setError(null);
     setDeleting(true);
     try {
@@ -250,7 +249,7 @@ export default function ProjectDetailPage() {
             <p className="pp-muted" style={{ marginBottom: "0.5rem" }}>
               Delete this project and all related files and history. This cannot be undone.
             </p>
-            <Button type="button" variant="danger" onClick={() => void handleDelete()} disabled={deleting}>
+            <Button type="button" variant="danger" onClick={() => setShowConfirmDelete(true)} disabled={deleting}>
               {deleting ? "Deleting…" : "Delete project"}
             </Button>
           </div>
@@ -291,6 +290,21 @@ export default function ProjectDetailPage() {
           </Link>
         </div>
       </Card>
+      <ConfirmDialog
+        open={showConfirmDelete}
+        title={`Delete ${project?.name ?? ""}?`}
+        message={
+          <>
+            <p>This removes all uploads, ingested data, and generated reports for this project forever.</p>
+            <p className="mt-2">Are you sure you want to continue?</p>
+          </>
+        }
+        confirmLabel="Delete project"
+        variant="danger"
+        loading={deleting}
+        onConfirm={() => void handleDelete()}
+        onCancel={() => setShowConfirmDelete(false)}
+      />
     </div>
   );
 }

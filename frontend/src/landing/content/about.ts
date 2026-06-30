@@ -1,4 +1,9 @@
-export const aboutContent = {
+export const aboutContent: {
+  seo: { title: string; description: string };
+  hero: { headline: string; subheadline: string };
+  mission: { headline: string; paragraphs: string[] };
+  values: { title: string; description: string }[];
+} = {
   seo: {
     title: "About \u2014 ProjectPilot",
     description:
@@ -34,4 +39,4 @@ export const aboutContent = {
         "The platform improves alongside your projects. Feedback from users drives our roadmap, and we release updates regularly based on what the community asks for.",
     },
   ],
-} as const;
+};

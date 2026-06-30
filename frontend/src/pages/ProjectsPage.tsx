@@ -4,6 +4,7 @@ import { deleteProject, fetchProjects, type ProjectOut } from "../api/projects";
 import { useAuth } from "../auth/AuthContext";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PageLoader } from "../components/PageLoader";
 import { useToast } from "../components/ToastProvider";
 import { friendlyErrorMessage } from "@/lib/friendlyMessages";
@@ -27,6 +28,7 @@ export default function ProjectsPage() {
   const [items, setItems] = useState<ProjectOut[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ProjectOut | null>(null);
   const [filterText, setFilterText] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -68,10 +70,7 @@ export default function ProjectsPage() {
 
   async function handleDelete(p: ProjectOut) {
     if (!canDeleteProject(user, p)) return;
-    const ok = window.confirm(
-      `Remove project “${p.name}”? All uploads, reports, and history for this project will be permanently deleted.`,
-    );
-    if (!ok) return;
+    setConfirmDelete(null);
     setDeletingId(p.id);
     try {
       await deleteProject(p.id);
@@ -213,7 +212,7 @@ export default function ProjectsPage() {
                               variant="danger"
                               className="pp-btn--sm"
                               disabled={deletingId === p.id}
-                              onClick={() => void handleDelete(p)}
+                              onClick={() => setConfirmDelete(p)}
                             >
                               {deletingId === p.id ? "Removing…" : "Delete"}
                             </Button>
@@ -266,6 +265,21 @@ export default function ProjectsPage() {
           </>
         )}
       </Card>
+      <ConfirmDialog
+        open={confirmDelete !== null}
+        title={`Remove ${confirmDelete?.name ?? ""}?`}
+        message={
+          <>
+            <p>All uploads, reports, and history for this project will be permanently deleted. This cannot be undone.</p>
+            <p className="mt-2">Are you sure you want to proceed?</p>
+          </>
+        }
+        confirmLabel="Delete project"
+        variant="danger"
+        loading={deletingId !== null}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete)}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }

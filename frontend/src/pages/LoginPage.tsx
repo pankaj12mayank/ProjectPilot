@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { postLoginPath } from "../auth/roleUtils";
 import { useBranding } from "../branding/BrandingProvider";
+import { useToast } from "../components/ToastProvider";
 import { validateLoginForm, type FieldErrors } from "../auth/validation";
 import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const toast = useToast();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +48,9 @@ export default function LoginPage() {
       const me = await login(email, password);
       navigate(postLoginPath(me.role, from), { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const msg = err instanceof Error ? err.message : "Login failed";
+      setError(msg);
+      toast.push("error", msg);
     } finally {
       setBusy(false);
     }

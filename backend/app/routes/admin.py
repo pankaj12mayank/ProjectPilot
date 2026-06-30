@@ -19,6 +19,15 @@ from app.schemas.email_settings import (
     EmailTestOut,
 )
 from app.schemas.logs import ActivityLogOut, PaginatedActivityLogsOut
+from app.schemas.plans import (
+    PlanCreateIn,
+    PlanFeatureOut,
+    PlanOut,
+    PlanFeatureUpdateIn,
+    PlanUpdateIn,
+    PaymentGatewayAdminOut,
+    PaymentGatewayUpdateIn,
+)
 from app.services import admin_service, branding_service, email_service, email_settings_service, event_log_service
 from app.services.logs_list_service import LogQuery, list_activity_logs_admin
 
@@ -343,3 +352,177 @@ def admin_post_email_settings_test(
         ip_address=_client_ip(request),
     )
     return EmailTestOut(ok=res.ok, message=res.message)
+
+
+# -------- Plan Management (system_owner) --------
+
+
+@router.get("/plans", response_model=list[PlanOut])
+def admin_list_plans(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[PlanOut]:
+    from app.services.plan_service import get_all_plans
+
+    return [PlanOut.model_validate(p) for p in get_all_plans(db)]
+
+
+@router.post("/plans", response_model=PlanOut, status_code=201)
+def admin_create_plan(
+    body: PlanCreateIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> PlanOut:
+    from app.services.plan_service import create_plan
+
+    plan = create_plan(db, body.model_dump())
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.plan.create", entity_type="plan",
+        entity_id=plan.id, detail={"name": plan.name, "slug": plan.slug},
+        ip_address=_client_ip(request),
+    )
+    return PlanOut.model_validate(plan)
+
+
+@router.get("/plans/{plan_id}", response_model=PlanOut)
+def admin_get_plan(
+    plan_id: str,
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> PlanOut:
+    from app.services.plan_service import get_plan
+
+    plan = get_plan(db, plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return PlanOut.model_validate(plan)
+
+
+@router.patch("/plans/{plan_id}", response_model=PlanOut)
+def admin_update_plan(
+    request: Request,
+    plan_id: str,
+    body: PlanUpdateIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> PlanOut:
+    from app.services.plan_service import get_plan, update_plan
+
+    plan = get_plan(db, plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    patch = {k: v for k, v in body.model_dump(exclude_none=True).items() if k in body.model_fields_set}
+    plan = update_plan(db, plan, patch)
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.plan.update", entity_type="plan",
+        entity_id=plan.id, detail={"fields": sorted(patch.keys())},
+        ip_address=_client_ip(request),
+    )
+    return PlanOut.model_validate(plan)
+
+
+@router.delete("/plans/{plan_id}", status_code=204)
+def admin_delete_plan(
+    request: Request,
+    plan_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> None:
+    from app.services.plan_service import delete_plan, get_plan
+
+    plan = get_plan(db, plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    delete_plan(db, plan)
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.plan.delete", entity_type="plan",
+        entity_id=plan_id, detail={"name": plan.name},
+        ip_address=_client_ip(request),
+    )
+
+
+@router.put("/plans/{plan_id}/features", response_model=list[PlanFeatureOut])
+def admin_update_plan_features(
+    request: Request,
+    plan_id: str,
+    body: PlanFeatureUpdateIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> list[PlanFeatureOut]:
+    from app.services.plan_service import get_plan, update_plan_features
+
+    plan = get_plan(db, plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    features = update_plan_features(db, plan, body.features)
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.plan.features.update", entity_type="plan",
+        entity_id=plan_id, detail={"feature_count": len(features)},
+        ip_address=_client_ip(request),
+    )
+    return [PlanFeatureOut.model_validate(f) for f in features]
+
+
+# -------- Payment Gateway Configuration (system_owner) --------
+
+
+@router.get("/gateways", response_model=list[PaymentGatewayAdminOut])
+def admin_list_gateways(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> list[PaymentGatewayAdminOut]:
+    from app.services.gateway_service import get_all_gateways, to_admin_out
+
+    return [PaymentGatewayAdminOut.model_validate(to_admin_out(gw)) for gw in get_all_gateways(db)]
+
+
+@router.patch("/gateways/{gateway_id}", response_model=PaymentGatewayAdminOut)
+def admin_update_gateway(
+    request: Request,
+    gateway_id: str,
+    body: PaymentGatewayUpdateIn,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> PaymentGatewayAdminOut:
+    from app.services.gateway_service import get_gateway, update_gateway, to_admin_out
+
+    gw = get_gateway(db, gateway_id)
+    if not gw:
+        raise HTTPException(status_code=404, detail="Gateway not found")
+    patch = {k: v for k, v in body.model_dump(exclude_none=True).items() if k in body.model_fields_set}
+    gw = update_gateway(db, gw, patch)
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.gateway.update", entity_type="payment_gateway",
+        entity_id=gateway_id, detail={"fields": sorted(patch.keys())},
+        ip_address=_client_ip(request),
+    )
+    return PaymentGatewayAdminOut.model_validate(to_admin_out(gw))
+
+
+@router.get("/subscriptions")
+def admin_list_subscriptions(
+    _: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    from app.services.subscription_service import get_all_subscriptions
+
+    return get_all_subscriptions(db)
+
+
+@router.post("/plans/reseed", status_code=200)
+def admin_reseed_plans(
+    request: Request,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Delete all existing plans and re-seed defaults (Starter, Professional, Enterprise)."""
+    from app.services.plan_service import seed_default_plans, get_all_plans
+
+    existing = get_all_plans(db)
+    for p in existing:
+        db.delete(p)
+    db.flush()
+    seed_default_plans(db)
+    event_log_service.write_audit(
+        db, actor_user_id=admin.id, action="admin.plans.reseed", entity_type="plan",
+        entity_id="*", detail={},
+        ip_address=_client_ip(request),
+    )
+    return {"status": "ok", "message": "Default plans re-seeded"}

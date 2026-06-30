@@ -29,13 +29,26 @@ export function ContactSection({
   const [subject, setSubject] = useState(form.subjects[0]);
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const mailto = subject === "Sales & Pricing" ? salesEmail : supportEmail;
-    const body = `Name: ${name}%0D%0AEmail: ${email}%0D%0A%0D%0A${message}`;
-    window.open(`mailto:${mailto}?subject=${encodeURIComponent(subject)}&body=${body}`);
-    setSent(true);
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/v1/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+      if (!res.ok) throw new Error("Could not send your message. Please try again later.");
+      setSent(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -57,9 +70,9 @@ export function ContactSection({
 
         {sent ? (
           <div className="mt-8 rounded-xl border border-border/50 bg-card p-8 text-center shadow-soft dark:shadow-soft-dark">
-            <p className="text-lg font-medium text-foreground">Message ready to send.</p>
+            <p className="text-lg font-medium text-foreground">Thank you for reaching out.</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Your default email client should open with a pre-addressed message.
+              We have received your message and will get back to you shortly.
             </p>
           </div>
         ) : (
@@ -84,8 +97,11 @@ export function ContactSection({
               <label htmlFor="contact-message" className="block text-sm font-medium text-foreground">{form.messageLabel}</label>
               <textarea id="contact-message" className="pp-input mt-1 min-h-[140px]" value={message} onChange={(e) => setMessage(e.target.value)} required />
             </div>
-            <button type="submit" className="pp-btn pp-btn--primary inline-flex h-11 items-center rounded-xl px-6 text-sm font-medium">
-              {form.submitText}
+            {submitError && (
+              <p className="text-sm text-destructive">{submitError}</p>
+            )}
+            <button type="submit" disabled={submitting} className="pp-btn pp-btn--primary inline-flex h-11 items-center rounded-xl px-6 text-sm font-medium">
+              {submitting ? "Sending..." : form.submitText}
             </button>
           </form>
         )}

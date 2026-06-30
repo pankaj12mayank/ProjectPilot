@@ -1,4 +1,19 @@
-export const contactContent = {
+export const contactContent: {
+  seo: { title: string; description: string };
+  headline: string;
+  subheadline: string;
+  supportEmail: string;
+  salesEmail: string;
+  responseTime: string;
+  form: {
+    nameLabel: string;
+    emailLabel: string;
+    subjectLabel: string;
+    messageLabel: string;
+    submitText: string;
+    subjects: string[];
+  };
+} = {
   seo: {
     title: "Contact \u2014 ProjectPilot",
     description:
@@ -24,4 +39,4 @@ export const contactContent = {
       "Other",
     ],
   },
-} as const;
+};

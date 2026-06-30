@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { isSystemOwner } from "../auth/roleUtils";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { FormField } from "../components/ui/FormField";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Modal } from "../components/ui/Modal";
@@ -82,6 +83,8 @@ export default function UsersPage() {
   const [cFullName, setCFullName] = useState("");
   const [cRole, setCRole] = useState<AssignableUserRole>("member");
   const [creating, setCreating] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState<UserRow | null>(null);
+  const [confirmDeletePermanent, setConfirmDeletePermanent] = useState<UserRow | null>(null);
   const [roleFilter, setRoleFilter] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -192,7 +195,7 @@ export default function UsersPage() {
   async function deactivate(u: UserRow) {
     if (u.id === currentUser?.id) return;
     if (!canManageSystemOwnerRow(actorRole, u)) return;
-    if (!confirm(`Deactivate ${u.email}? They will not be able to sign in until reactivated.`)) return;
+    setConfirmDeactivate(null);
     setError(null);
     try {
       const uid = encodeURIComponent(u.id);
@@ -235,18 +238,12 @@ export default function UsersPage() {
 
   async function deletePermanent(u: UserRow) {
     if (!canHardDeleteRow(currentUser?.id, u)) return;
+    setConfirmDeletePermanent(null);
     const uid = (u.id || "").trim();
     if (!uid) {
       const msg = "This row is missing an account id. Refresh the page and try again.";
       setError(msg);
       toast.push("error", msg);
-      return;
-    }
-    if (
-      !confirm(
-        `Permanently delete ${u.email}? This cannot be undone. Projects they owned will be reassigned to you.`,
-      )
-    ) {
       return;
     }
     setError(null);
@@ -354,7 +351,7 @@ export default function UsersPage() {
                       ? "Only the system owner may change this account."
                       : undefined
                 }
-                onClick={() => void deactivate(r)}
+                onClick={() => setConfirmDeactivate(r)}
               >
                 Deactivate
               </Button>
@@ -382,7 +379,7 @@ export default function UsersPage() {
                       : undefined
                   : undefined
               }
-              onClick={() => void deletePermanent(r)}
+              onClick={() => setConfirmDeletePermanent(r)}
             >
               Delete
             </Button>
@@ -597,6 +594,38 @@ export default function UsersPage() {
           </FormField>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDeactivate !== null}
+        title={`Deactivate ${confirmDeactivate?.email ?? ""}?`}
+        message={
+          <>
+            <p>This person will no longer be able to sign in. Their projects and data remain intact.</p>
+            <p className="mt-2">You can turn the account back on at any time.</p>
+          </>
+        }
+        confirmLabel="Deactivate"
+        variant="danger"
+        loading={saving}
+        onConfirm={() => confirmDeactivate && deactivate(confirmDeactivate)}
+        onCancel={() => setConfirmDeactivate(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmDeletePermanent !== null}
+        title={`Permanently delete ${confirmDeletePermanent?.email ?? ""}?`}
+        message={
+          <>
+            <p>This cannot be undone. All data associated with this account will be removed.</p>
+            <p className="mt-2">Any projects they own will be reassigned to you.</p>
+          </>
+        }
+        confirmLabel="Delete account"
+        variant="danger"
+        loading={saving}
+        onConfirm={() => confirmDeletePermanent && deletePermanent(confirmDeletePermanent)}
+        onCancel={() => setConfirmDeletePermanent(null)}
+      />
     </Card>
   );
 }

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -294,3 +294,110 @@ class BrandingSettings(Base):
         default=lambda: datetime.now(timezone.utc),
     )
     updated_by_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+
+
+class Plan(Base):
+    __tablename__ = "plans"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    slug: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price_monthly: Mapped[float | None] = mapped_column(Float, nullable=True)
+    price_yearly: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str] = mapped_column(String(3), default="GBP")
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_free: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    features: Mapped[list["PlanFeature"]] = relationship(
+        "PlanFeature", back_populates="plan", cascade="all, delete-orphan",
+    )
+
+
+class PlanFeature(Base):
+    __tablename__ = "plan_features"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    plan_id: Mapped[str] = mapped_column(String(36), ForeignKey("plans.id"), nullable=False)
+    feature_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    feature_label: Mapped[str] = mapped_column(String(255), nullable=False)
+    value: Mapped[str] = mapped_column(String(255), nullable=False, default="true")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    plan: Mapped["Plan"] = relationship("Plan", back_populates="features")
+
+
+class PaymentGateway(Base):
+    __tablename__ = "payment_gateways"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    label: Mapped[str] = mapped_column(String(100), nullable=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    api_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    secret_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    webhook_secret: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extra_config_json: Mapped[str] = mapped_column(Text, default="{}")
+    is_test_mode: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    plan_id: Mapped[str] = mapped_column(String(36), ForeignKey("plans.id"), nullable=False)
+    gateway_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("payment_gateways.id"), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    gateway_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    gateway_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    current_period_start: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, default=False)
+    trial_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    user: Mapped["User"] = relationship("User")
+    plan: Mapped["Plan"] = relationship("Plan")
+    gateway: Mapped["PaymentGateway | None"] = relationship("PaymentGateway")
+
+
+class ContactSubmission(Base):
+    __tablename__ = "contact_submissions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255))
+    subject: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )

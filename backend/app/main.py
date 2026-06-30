@@ -17,7 +17,8 @@ from app.services.email_settings_service import (
     ensure_email_settings_migrations,
     seed_default_if_missing as seed_email_settings_if_missing,
 )
-from app.services import project_service, user_service
+from app.services import project_service, user_service, gateway_service
+from app.services.plan_service import seed_default_plans
 from app.utils.logging_config import setup_logging
 
 
@@ -35,6 +36,8 @@ async def lifespan(_: FastAPI):
         seed_default_if_missing(db)
         ensure_email_settings_migrations(db)
         seed_email_settings_if_missing(db)
+        gateway_service.seed_gateways(db)
+        seed_default_plans(db)
     finally:
         db.close()
     yield

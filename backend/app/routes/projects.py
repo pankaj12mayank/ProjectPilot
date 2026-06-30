@@ -13,6 +13,7 @@ from app.config.settings import get_settings
 from app.db.models import Project, ProjectFile, ProjectMetricsSnapshot, ProjectReportRun, User
 from app.db.session import get_db
 from app.deps.auth import get_current_user
+from app.deps.plan_enforcer import check_project_limit, check_report_limit
 from app.deps.project import fetch_deletable_project, get_accessible_project, get_owned_project
 from app.schemas.project import (
     AnalyzeUploadResponse,
@@ -77,6 +78,7 @@ def create_project(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ProjectOut:
+    check_project_limit(user, db)
     try:
         p = project_service.create_project(db, user, body)
     except ValueError as exc:
@@ -226,7 +228,7 @@ def generate_project_reports(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ProjectReportPackageOut:
-    """Forecast, root causes, recommendations, and multi-format exports under outputs/reports/{job_id}/."""
+    check_report_limit(project.id, user, db)
     try:
         from app.services.report_package_service import generate_project_report_package
 
