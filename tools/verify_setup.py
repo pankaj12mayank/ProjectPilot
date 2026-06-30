@@ -19,10 +19,10 @@ BACKEND = REPO / "backend"
 
 def main() -> int:
     required = [
-        "backend/requirements.txt",
+        "requirements.txt",
         "backend/app/main.py",
         "frontend/package.json",
-        "docker-compose.yml",
+        "run.bat",
         ".env.example",
         "frontend/.env.example",
     ]
@@ -40,7 +40,7 @@ def main() -> int:
     try:
         from app.main import app  # noqa: F401
     except Exception as exc:  # pragma: no cover — diagnostic only
-        print("verify_setup: backend import failed (install deps: pip install -r backend/requirements.txt):", exc)
+        print("verify_setup: backend import failed (install deps: pip install -r requirements.txt):", exc)
         return 1
 
     print("verify_setup: OK - repo layout and app.main import.")

@@ -100,7 +100,7 @@ def run_cli_setup() -> int:
     print("Upgrading pip ...", flush=True)
     subprocess.run([str(pip), "install", "--upgrade", "pip"], check=False)
 
-    req = root / "backend" / "requirements.txt"
+    req = root / "requirements.txt"
     if not req.is_file():
         print(f"ERROR: Missing {req}", file=sys.stderr)
         input("Press Enter to close…")
@@ -142,8 +142,8 @@ def run_cli_setup() -> int:
     print("", flush=True)
     print("Done. Next steps:", flush=True)
     print("  1. Edit .env (JWT_SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD, CORS_ORIGINS, DATABASE_URL if needed)")
-    print("  2. Start the stack: install Docker Desktop, then:  docker compose up --build")
-    print(r"     Or double-click run.bat. Without Docker, see SETUP_NOTES / README (manual Uvicorn + Vite).")
+    print("  2. Start the stack: double-click run.bat (or run.sh on Linux/macOS).")
+    print(r"     Or see README for manual Uvicorn + Vite steps.")
     print("  3. Sign in with the admin from .env; add users under Admin → Users.")
     input("\nPress Enter to close…")
     return 0

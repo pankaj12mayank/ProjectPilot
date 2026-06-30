@@ -4,7 +4,7 @@ ProjectPilot — Windows setup (important information)
 What the setup does
 -------------------
 • Creates a Python virtual environment (.venv) in this folder
-• Installs backend Python packages from backend\requirements.txt
+• Installs backend Python packages from requirements.txt
 • Runs npm install in the frontend\ folder
 • Copies .env.example to .env if .env does not exist yet (you must edit secrets afterward)
 
@@ -16,14 +16,13 @@ What this is NOT
 
 After setup — how to run the app
 ---------------------------------
-• Recommended: install Docker Desktop, start it until the engine is running, then double-click run.bat
-  (or from this folder: docker compose up --build). That runs the API on port 8000 and the UI on 5173.
-• Without Docker: use README section 4 (Path B, manual) — Uvicorn in backend\ and npm run dev in frontend\.
+• Double-click run.bat — it starts the backend (uvicorn) and frontend (vite) in separate windows.
+• Without run.bat: use README — Uvicorn in backend\ and npm run dev in frontend\.
 
 After you update the folder (git pull / copy new files)
 -------------------------------------------------------
 • Optional: python tools\verify_setup.py
-• Start again: run.bat (with Docker) or the manual two-terminal flow.
+• Start again: run.bat or the manual two-terminal flow.
 
 Network and other failures
 ----------------------------

@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def _repo_root() -> Path:
-    """Runtime data root: repo root in dev, or `/work` in the default Docker layout."""
+    """Runtime data root: repo root in dev, or PROJECT_ROOT override."""
     override = os.environ.get("PROJECT_ROOT", "").strip()
     if override:
         return Path(override).resolve()

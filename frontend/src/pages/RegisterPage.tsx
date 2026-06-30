@@ -12,6 +12,8 @@ import { useTheme } from "@/theme";
 
 export default function RegisterPage() {
   const { register, user, ready } = useAuth();
+  const { branding } = useBranding();
+  const { resolved } = useTheme();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");

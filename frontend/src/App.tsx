@@ -7,6 +7,7 @@ import { PageLoader } from "./components/PageLoader";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RequireRole } from "./routes/RequireRole";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { LandingLayout } from "./landing/LandingLayout";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
@@ -42,6 +43,20 @@ const AdminSystemPage = lazy(() => import("./pages/AdminSystemPage"));
 const AdminEmailPage = lazy(() => import("./pages/AdminEmailPage"));
 const AdminActivityPage = lazy(() => import("./pages/AdminActivityPage"));
 
+const HomePage = lazy(() => import("./landing/pages/HomePage"));
+const FeaturesPage = lazy(() => import("./landing/pages/FeaturesPage"));
+const WorkflowPage = lazy(() => import("./landing/pages/WorkflowPage"));
+const PricingPage = lazy(() => import("./landing/pages/PricingPage"));
+const AboutPage = lazy(() => import("./landing/pages/AboutPage"));
+const ContactPage = lazy(() => import("./landing/pages/ContactPage"));
+const PrivacyPolicyPage = lazy(() => import("./landing/pages/legal/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("./landing/pages/legal/TermsOfServicePage"));
+const CookiePolicyPage = lazy(() => import("./landing/pages/legal/CookiePolicyPage"));
+
+function Lazy({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+}
+
 function AuthShell() {
   return (
     <div className="pp-auth-shell">
@@ -60,26 +75,25 @@ function LegacyAdminRedirect() {
   return <Navigate to={`/dashboard/admin${tail}${search}`} replace />;
 }
 
-function RootRedirect() {
-  const { user, ready } = useAuth();
-  if (!ready) {
-    return <PageLoader />;
-  }
-  if (user) {
-    return <Navigate to={isPlatformAdmin(user.role) ? "/dashboard/admin" : "/dashboard"} replace />;
-  }
-  return <Navigate to="/login" replace />;
-}
-
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<RootRedirect />} />
-      <Route element={<AuthShell />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route element={<LandingLayout />}>
+        <Route index element={<Lazy><HomePage /></Lazy>} />
+        <Route path="features" element={<Lazy><FeaturesPage /></Lazy>} />
+        <Route path="workflow" element={<Lazy><WorkflowPage /></Lazy>} />
+        <Route path="pricing" element={<Lazy><PricingPage /></Lazy>} />
+        <Route path="about" element={<Lazy><AboutPage /></Lazy>} />
+        <Route path="contact" element={<Lazy><ContactPage /></Lazy>} />
+        <Route path="privacy" element={<Lazy><PrivacyPolicyPage /></Lazy>} />
+        <Route path="terms" element={<Lazy><TermsOfServicePage /></Lazy>} />
+        <Route path="cookies" element={<Lazy><CookiePolicyPage /></Lazy>} />
+        <Route element={<AuthShell />}>
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
+        </Route>
       </Route>
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<LegacyAdminRedirect />} />
