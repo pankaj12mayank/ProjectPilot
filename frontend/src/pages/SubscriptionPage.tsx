@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { isPlatformAdmin } from "../auth/roleUtils";
 import {
   fetchMySubscription,
   fetchPublicPlans,
@@ -50,11 +51,9 @@ export default function SubscriptionPage() {
 
   const checkoutResult = searchParams.get("checkout");
   const checkoutMessage =
-    checkoutResult === "success"
-      ? "Subscription activated! Welcome aboard."
-      : checkoutResult === "cancel"
-        ? "Checkout was cancelled. No charges were made."
-        : null;
+    checkoutResult === "cancel"
+      ? "Checkout was cancelled. No charges were made."
+      : null;
 
   useEffect(() => {
     if (!ready || !user) return;
@@ -77,11 +76,20 @@ export default function SubscriptionPage() {
     return () => { cancelled = true; };
   }, [ready, user]);
 
+  function detectGateway() {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz === "Asia/Kolkata") return "razorpay";
+    } catch { /* fall through */ }
+    return "stripe";
+  }
+
   async function handleCheckout(planSlug: string) {
     setActionLoading(planSlug);
     setError(null);
     try {
-      const result = await createCheckoutSession(planSlug);
+      const gateway = detectGateway();
+      const result = await createCheckoutSession(planSlug, gateway);
       if (result.is_free) {
         toast.push("success", "Free plan activated. Start using it right away.");
         const s = await fetchMySubscription();
@@ -153,6 +161,8 @@ export default function SubscriptionPage() {
   }
 
   if (!ready || !user) return <PageLoader />;
+  if (isPlatformAdmin(user.role)) return <Navigate to="/dashboard/admin" replace />;
+  if (checkoutResult === "success") return <Navigate to="/dashboard" replace />;
 
   const currentPlan = plans.find((p) => p.id === sub?.plan_id);
   const statusMeta = sub ? STATUS_LABELS[sub.status] || { label: sub.status, variant: "outline" as const } : null;

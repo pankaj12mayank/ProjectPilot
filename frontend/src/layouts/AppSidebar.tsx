@@ -41,10 +41,11 @@ const primaryNav: NavItem[] = [
   { to: "/dashboard/reports", label: "Reports", icon: ScrollText },
   { to: "/dashboard/risks", label: "Risks", icon: Shield },
   { to: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles },
-  { to: "/dashboard/subscription", label: "Subscription", icon: CreditCard },
   { to: "/dashboard/logs", label: "Activity & logs", icon: ClipboardList },
   { to: "/dashboard/templates", label: "Templates", icon: FileStack },
 ];
+
+const subscriptionNav: NavItem = { to: "/dashboard/subscription", label: "Subscription", icon: CreditCard };
 
 const adminNav: NavItem[] = [
   { to: "/dashboard/admin", label: "Overview", icon: Activity, end: true },
@@ -94,6 +95,7 @@ export function AppSidebar({ mobileOpen, onNavigate }: { mobileOpen: boolean; on
   const logoInvertClass = useSidebarLogoInvertClass(logo, logoFilter, resolved === "dark");
 
   const showAdmin = Boolean(user && isPlatformAdmin(user.role));
+  const canSubscribe = user && !isPlatformAdmin(user.role);
 
   return (
     <aside
@@ -122,6 +124,9 @@ export function AppSidebar({ mobileOpen, onNavigate }: { mobileOpen: boolean; on
           {primaryNav.map((item) => (
             <NavButton key={item.to} item={item} onNavigate={onNavigate} />
           ))}
+          {canSubscribe && (
+            <NavButton item={subscriptionNav} onNavigate={onNavigate} />
+          )}
         </nav>
 
         {showAdmin ? (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import { postLoginPath } from "../auth/roleUtils";
+import { isPlatformAdmin, postLoginPath } from "../auth/roleUtils";
 import { useBranding } from "../branding/BrandingProvider";
 import { useToast } from "../components/ToastProvider";
 import { validateRegisterForm, type FieldErrors } from "../auth/validation";
@@ -46,7 +46,8 @@ export default function RegisterPage() {
     try {
       const me = await register(email, password, fullName);
       toast.push("success", "Account created successfully.");
-      navigate(postLoginPath(me.role, "/dashboard"), { replace: true });
+      const dest = isPlatformAdmin(me.role) ? "/dashboard/admin" : "/dashboard/subscription";
+      navigate(dest, { replace: true });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Registration failed";
       setError(msg);
