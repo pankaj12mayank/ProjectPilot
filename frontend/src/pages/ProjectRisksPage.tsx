@@ -93,7 +93,7 @@ export default function ProjectRisksPage() {
   if (loading && !project) return <PageLoader />;
 
   return (
-    <div className="pp-grid pp-grid--1 mx-auto w-full max-w-[1600px]">
+    <div className="pp-grid pp-grid--1 w-full">
       <Card
         title={project ? `Project risks — ${project.name}` : "Project risks"}
         actions={
@@ -115,12 +115,12 @@ export default function ProjectRisksPage() {
             {error}
           </p>
         ) : null}
-        <p className="pp-muted mx-auto max-w-2xl text-center text-pretty">
+        <p className="pp-muted w-full text-center text-pretty">
           Register risks here (severity and open/closed status). They are stored on the project, can be linked to a
           report job id, and appear on the dashboard, health analytics, and generated report narratives.
         </p>
 
-        <form onSubmit={handleCreate} className="pp-stack mx-auto w-full max-w-3xl" style={{ marginTop: "1.25rem" }}>
+        <form onSubmit={handleCreate} className="pp-stack w-full" style={{ marginTop: "1.25rem" }}>
           <FormField label="Title" htmlFor="risk-title">
             <input
               id="risk-title"

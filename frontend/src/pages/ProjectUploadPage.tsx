@@ -495,7 +495,6 @@ export default function ProjectUploadPage() {
           <span aria-hidden="true"> / </span>
           <span className="pp-upload-breadcrumb__here">Upload data</span>
         </nav>
-        <h1 className="pp-upload-hero__title">Upload project files</h1>
         <p className="pp-upload-hero__sub">
           Files are tied to <strong>{project.name}</strong>
           <span className="pp-muted"> · project id {project.id}</span>

@@ -158,7 +158,7 @@ export default function AdminEmailPage() {
 
   if (loading && !remote) {
     return (
-      <div className="mx-auto w-full max-w-[960px] space-y-4">
+      <div className="w-full space-y-4">
         <p className="text-sm text-muted-foreground">Loading…</p>
       </div>
     );
@@ -166,7 +166,7 @@ export default function AdminEmailPage() {
 
   if (!remote) {
     return (
-      <div className="mx-auto w-full max-w-[960px] space-y-4">
+      <div className="w-full space-y-4">
         <p className="text-sm text-destructive">Could not load email settings.</p>
         <Button type="button" variant="secondary" className="rounded-xl" onClick={() => void load()}>
           Retry
@@ -176,10 +176,9 @@ export default function AdminEmailPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[960px] space-y-6">
+    <div className="w-full space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Transactional email</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           Choose SMTP or SendGrid. Secrets are stored encrypted — update them here without code changes. Configure the
           public app URL under{" "}
           <Link className="text-primary underline-offset-4 hover:underline" to="/dashboard/admin/branding">

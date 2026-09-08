@@ -26,10 +26,9 @@ export default function AdminSystemPage() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6">
+    <div className="w-full space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">System configuration</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           Effective values from the running API (environment + defaults). Change variables in <code className="rounded bg-muted px-1 py-0.5 text-xs">.env</code>{" "}
           and restart the server to apply.
         </p>

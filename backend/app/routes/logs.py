@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.deps.auth import get_current_user, require_admin
-from app.db.models import User
+from app.db.models import AuditLog, ActivityLog, NotificationLog, User
 from app.schemas.logs import (
     ActivityLogOut,
     AuditLogOut,
@@ -118,3 +118,54 @@ def get_notification_logs(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post("/audit/bulk-delete")
+def bulk_delete_audit_logs(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+    ids: list[str] = Body(..., embed=True),
+) -> dict:
+    if not ids:
+        return {"deleted": 0}
+    # Hard delete
+    q = db.query(AuditLog).filter(AuditLog.id.in_(ids))
+    count = q.count()
+    q.delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": count}
+
+
+@router.post("/activity/bulk-delete")
+def bulk_delete_activity_logs(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    ids: list[str] = Body(..., embed=True),
+) -> dict:
+    if not ids:
+        return {"deleted": 0}
+    from app.constants.roles import ADMIN, SYSTEM_OWNER
+
+    q = db.query(ActivityLog).filter(ActivityLog.id.in_(ids))
+    # Non-admin can only delete own logs
+    if user.role not in (ADMIN, SYSTEM_OWNER):
+        q = q.filter(ActivityLog.actor_user_id == user.id)
+    count = q.count()
+    q.delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": count}
+
+
+@router.post("/notifications/bulk-delete")
+def bulk_delete_notification_logs(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    ids: list[str] = Body(..., embed=True),
+) -> dict:
+    if not ids:
+        return {"deleted": 0}
+    q = db.query(NotificationLog).filter(NotificationLog.id.in_(ids), NotificationLog.user_id == user.id)
+    count = q.count()
+    q.delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": count}

@@ -218,7 +218,7 @@ export default function ProjectHealthPage() {
   const { kpis, evm, risk, milestones, resources, dependencies } = data;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px]">
+    <div className="w-full">
       <div className="pp-grid pp-grid--1 w-full">
       <Card
         className="w-full"

@@ -174,8 +174,6 @@ export default function AdminPlansPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-pp-dashboard font-hero font-bold text-foreground">Plans</h1>
-
       {editingPlan && (
         <Card title={`Edit: ${editingPlan.name}`}>
           <div className="space-y-4">

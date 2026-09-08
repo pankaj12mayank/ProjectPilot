@@ -168,9 +168,8 @@ export default function SubscriptionPage() {
   const statusMeta = sub ? STATUS_LABELS[sub.status] || { label: sub.status, variant: "outline" as const } : null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
-        <h1 className="pp-type-dashboard-title text-foreground">Subscription</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage your plan and billing.</p>
       </div>
 

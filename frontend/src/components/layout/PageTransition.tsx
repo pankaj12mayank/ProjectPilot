@@ -1,9 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { globalLoader } from "@/components/GlobalAILoader";
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const location = useLocation();
+  useEffect(() => {
+    globalLoader.show("Switching…");
+    const t = window.setTimeout(() => globalLoader.hide(), 320);
+    return () => window.clearTimeout(t);
+  }, [location.pathname]);
   return (
     <AnimatePresence mode="wait">
       <motion.div

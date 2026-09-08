@@ -155,11 +155,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-10">
+    <div className="w-full space-y-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="pp-type-dashboard-title text-foreground">Dashboard</h1>
-          <p className="mt-1 max-w-3xl font-sans text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-1 w-full font-sans text-sm leading-relaxed text-muted-foreground">
             Signed in as <span className="font-medium text-foreground">{user.full_name}</span>. Below is a portfolio
             snapshot with delivery and risk signals from the latest data.
           </p>

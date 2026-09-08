@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import {
   Activity,
+  Bot,
   ClipboardList,
   CreditCard,
   FileStack,
@@ -51,6 +52,7 @@ const adminNav: NavItem[] = [
   { to: "/dashboard/admin", label: "Overview", icon: Activity, end: true },
   { to: "/dashboard/admin/branding", label: "Branding", icon: Palette },
   { to: "/dashboard/admin/email", label: "Email / SMTP", icon: Mail },
+  { to: "/dashboard/admin/ai", label: "AI Configuration", icon: Bot },
   { to: "/dashboard/admin/users", label: "Users & roles", icon: Users },
   { to: "/dashboard/admin/audit", label: "Audit log", icon: ShieldCheck },
   { to: "/dashboard/admin/activity", label: "Activity explorer", icon: ClipboardList },

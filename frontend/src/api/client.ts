@@ -1,3 +1,5 @@
+import { globalLoader } from "@/components/GlobalAILoader";
+
 /** API origin only (protocol + host + optional port). Never put `/api/v1` here — paths use API_PREFIX below. */
 const API_BASE = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 /** Must match backend `API_PREFIX` (see repo `.env.example`). */
@@ -81,6 +83,12 @@ function shouldAttemptRefresh(path: string): boolean {
   return !AUTH_PATH_SKIP_REFRESH.some((p) => path.startsWith(p));
 }
 
+let _pending = 0;
+function _loaderFor(path: string) {
+  // AI, reports, uploads, and any POST that may take >300ms use single global loader
+  if (path.includes("/ai") || path.includes("/reports/generate") || path.includes("/uploads")) return true;
+  return false;
+}
 export async function apiFetch(path: string, init: RequestInit = {}, isRetry = false): Promise<Response> {
   const headers = new Headers(init.headers);
   const token = getToken();
@@ -93,7 +101,22 @@ export async function apiFetch(path: string, init: RequestInit = {}, isRetry = f
   ) {
     headers.set("Content-Type", "application/json");
   }
-  const res = await fetch(apiUrl(path), { ...init, headers });
+  const useLoader = _loaderFor(path);
+  let t: number | undefined;
+  if (useLoader) {
+    _pending++;
+    t = window.setTimeout(() => globalLoader.show(path.includes("/ai") ? "AI thinking…" : "Processing…"), 180);
+  }
+  let res: Response;
+  try {
+    res = await fetch(apiUrl(path), { ...init, headers });
+  } finally {
+    if (useLoader) {
+      if (t) window.clearTimeout(t);
+      _pending = Math.max(0, _pending - 1);
+      if (_pending === 0) globalLoader.hide();
+    }
+  }
 
   const method = (init.method ?? "GET").toUpperCase();
   const body = init.body;

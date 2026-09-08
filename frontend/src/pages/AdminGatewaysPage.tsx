@@ -81,7 +81,6 @@ export default function AdminGatewaysPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-pp-dashboard font-hero font-bold text-foreground">Payment Gateways</h1>
       <p className="text-sm text-muted-foreground">
         Configure Stripe and Razorpay credentials. The system owner enters the API keys, secret keys, and webhook secrets here.
         Both gateways can be enabled simultaneously.

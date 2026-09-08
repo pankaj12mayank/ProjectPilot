@@ -136,10 +136,9 @@ export default function ReportsHubPage() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Reports</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           Each workspace is opened in the context of a project you choose. Governance uses uploads you attach on the
           next screen; metrics opens that project&apos;s health analytics; portfolio opens the cross-project view with
           your selection highlighted for trends.

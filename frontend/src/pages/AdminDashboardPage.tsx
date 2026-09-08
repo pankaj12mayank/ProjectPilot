@@ -5,6 +5,7 @@ import { fetchAdminActivityLogsPaged, type ActivityLogRow } from "../api/logs";
 import { ROLE_LABELS, type UserRole } from "../auth/types";
 import { Button } from "@/components/shadcn/button";
 import { Card, CardContent } from "@/components/shadcn/card";
+import { Pagination } from "@/components/ui/Pagination";
 
 type RagDistribution = Record<string, number>;
 
@@ -156,11 +157,10 @@ export default function AdminDashboardPage() {
     : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-8">
+    <div className="w-full space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Control center</h1>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          <p className="mt-1 w-full text-sm text-muted-foreground">
             Live counts and shortcuts — same workspace shell as the rest of the app. Figures poll in the background; use
             refresh for an immediate pull.
           </p>
@@ -255,30 +255,11 @@ export default function AdminDashboardPage() {
           <section aria-label="Recent activity">
             <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent activity</h2>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-md"
-                  disabled={actOff === 0 || actLoading}
-                  onClick={() => setActOff((o) => Math.max(0, o - ACT_PAGE))}
-                >
-                  Prev
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="rounded-md"
-                  disabled={actOff + ACT_PAGE >= actTotal || actLoading}
-                  onClick={() => setActOff((o) => o + ACT_PAGE)}
-                >
-                  Next
-                </Button>
-              </div>
+              <Link to="/dashboard/admin/activity" className="text-xs font-medium text-primary hover:underline">
+                Full explorer →
+              </Link>
             </div>
-            <Card className="border-border/80">
+            <Card className="overflow-hidden border-border/80">
               <CardContent className="p-0">
                 {actLoading ? <p className="p-4 text-sm text-muted-foreground">Loading…</p> : null}
                 {!actLoading && actRows.length === 0 ? <p className="p-4 text-sm text-muted-foreground">No rows.</p> : null}
@@ -294,13 +275,18 @@ export default function AdminDashboardPage() {
                     ))}
                   </ul>
                 ) : null}
-                <p className="border-t border-border/60 px-4 py-2 text-xs text-muted-foreground">
-                  {actTotal ? `Showing ${actOff + 1}–${actOff + actRows.length} of ${actTotal}` : null}
-                  {" · "}
-                  <Link to="/dashboard/admin/activity" className="font-medium text-primary hover:underline">
+                <Pagination
+                  page={actOff}
+                  pageSize={ACT_PAGE}
+                  total={actTotal}
+                  onPrev={() => setActOff((o) => Math.max(0, o - ACT_PAGE))}
+                  onNext={() => setActOff((o) => o + ACT_PAGE)}
+                />
+                <div className="border-t border-border/40 bg-muted/20 px-4 py-2 text-center">
+                  <Link to="/dashboard/admin/activity" className="text-xs font-medium text-primary hover:underline">
                     Full explorer
                   </Link>
-                </p>
+                </div>
               </CardContent>
             </Card>
           </section>

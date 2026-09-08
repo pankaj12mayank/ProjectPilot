@@ -29,7 +29,7 @@ export default function MetricsDashboardPage() {
 
   if (error) {
     return (
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="w-full">
         <Card title="Metrics dashboard">
           <p className="pp-field__error">{error}</p>
         </Card>
@@ -42,9 +42,9 @@ export default function MetricsDashboardPage() {
   const highlighted = highlightId ? projects.find((p) => p.id === highlightId) : null;
 
   return (
-    <div className="pp-grid pp-grid--1 mx-auto w-full max-w-7xl">
+    <div className="pp-grid pp-grid--1 w-full">
       <Card title="Metrics & analytics">
-        <p className="pp-muted mx-auto max-w-3xl text-center text-pretty">
+        <p className="pp-muted w-full text-center text-pretty">
           KPIs, EVM, RAID-derived signals, and RAG are computed from validated ingested uploads per project. Prefer
           selecting a project from <Link to="/dashboard/reports">Reports</Link> so you land in the right workspace;
           this page lists every project for quick access.

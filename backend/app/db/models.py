@@ -401,3 +401,42 @@ class ContactSubmission(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
+
+
+class AiSettings(Base):
+    """Singleton row (id=`default`) for AI provider configuration (OpenAI-compatible)."""
+
+    __tablename__ = "ai_settings"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    provider: Mapped[str] = mapped_column(String(32), default="openai")
+    base_url: Mapped[str] = mapped_column(String(512), default="")
+    model: Mapped[str] = mapped_column(String(128), default="gpt-4o-mini")
+    api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    temperature: Mapped[float] = mapped_column(Float, default=0.7)
+    max_tokens: Mapped[int] = mapped_column(Integer, default=1024)
+    timeout_ms: Mapped[int] = mapped_column(Integer, default=15000)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_by_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)
+
+
+class AiPrompt(Base):
+    """Admin-editable prompt templates for AI enhancements (key is stable, template is editable)."""
+
+    __tablename__ = "ai_prompts"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    prompt_template: Mapped[str] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_by_user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), nullable=True)

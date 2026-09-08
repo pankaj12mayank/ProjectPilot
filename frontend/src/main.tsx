@@ -6,6 +6,7 @@ import { BrandingProvider } from "./branding/BrandingProvider";
 import { ToastProvider } from "./components/ToastProvider";
 import { TooltipProvider } from "@/components/shadcn/tooltip";
 import { ThemeProvider } from "./theme";
+import { GlobalAILoaderProvider } from "./components/GlobalAILoader";
 import App from "./App";
 import "./styles/tailwind.css";
 import "./index-legacy.css";
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <BrandingProvider>
               <TooltipProvider delayDuration={200}>
                 <ToastProvider>
-                  <App />
+                  <GlobalAILoaderProvider>
+                    <App />
+                  </GlobalAILoaderProvider>
                 </ToastProvider>
               </TooltipProvider>
             </BrandingProvider>

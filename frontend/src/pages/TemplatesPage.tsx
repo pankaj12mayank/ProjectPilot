@@ -25,13 +25,12 @@ export default function TemplatesPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="w-full space-y-8">
       <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-br from-primary/10 via-card to-[hsl(var(--brand-secondary)/0.12)] p-6 shadow-card md:p-8">
         <div className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-foreground md:text-4xl">Template library</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p className="mt-2 w-full text-sm leading-relaxed text-muted-foreground md:text-base">
               These playbooks only set the starting description and a stored template key on the project. Upload rules
               are the same for every project. When you create a project, step one lists all templates so you can pick one
               before continuing.

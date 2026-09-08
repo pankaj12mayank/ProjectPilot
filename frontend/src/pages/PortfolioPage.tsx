@@ -125,7 +125,7 @@ export default function PortfolioPage() {
   const data = comparison;
 
   return (
-    <div className="pp-grid pp-grid--1 mx-auto max-w-7xl">
+    <div className="pp-grid pp-grid--1 w-full">
       <Card
         title="Portfolio"
         actions={

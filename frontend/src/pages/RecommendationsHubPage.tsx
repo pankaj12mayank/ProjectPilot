@@ -6,10 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function RecommendationsHubPage() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Recommendations</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           After intelligence runs complete for a project, structured recommendations appear on that project&apos;s
           recommendations page. Pick a project below or browse the full list.
         </p>

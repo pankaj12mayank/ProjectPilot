@@ -4,6 +4,8 @@ import { fetchProjectRisks, fetchProjects, type ProjectOut, type ProjectRiskOut 
 import { Button } from "@/components/shadcn/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card";
 import { PageLoader } from "@/components/PageLoader";
+import { FilterField, FiltersBar, SearchField } from "@/components/ui/FiltersBar";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Flow = "register" | "snapshot";
 
@@ -94,10 +96,9 @@ export default function RisksHubPage() {
   if (loadingList && !projects) return <PageLoader />;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="w-full space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Risks</h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           Choose whether you are opening the live register to add or edit items, or reviewing a read-only snapshot. In
           both cases, pick the project first. RAID rows from uploads inform health scores; this list is for registered
           project risks you maintain explicitly.
@@ -198,26 +199,12 @@ export default function RisksHubPage() {
             <CardDescription>Search and filter the list, then open the dashboard if you need to edit.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid w-full gap-3 sm:grid-cols-2">
-              <div className="flex w-full flex-col gap-2">
-                <label htmlFor="risk-q" className="text-sm font-medium text-foreground">
-                  Search
-                </label>
-                <input
-                  id="risk-q"
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Title or description"
-                />
-              </div>
-              <div className="flex w-full flex-col gap-2">
-                <label htmlFor="risk-status" className="text-sm font-medium text-foreground">
-                  Status
-                </label>
+            <FiltersBar>
+              <SearchField label="Search" value={q} onChange={setQ} placeholder="Title or description" />
+              <FilterField label="Status" className="max-w-[220px] flex-none">
                 <select
                   id="risk-status"
-                  className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+                  className="h-9 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
                 >
@@ -225,8 +212,8 @@ export default function RisksHubPage() {
                   <option value="open">Open</option>
                   <option value="closed">Closed</option>
                 </select>
-              </div>
-            </div>
+              </FilterField>
+            </FiltersBar>
 
             {loadingRisks ? (
               <p className="text-sm text-muted-foreground">Loading risks…</p>
@@ -239,64 +226,42 @@ export default function RisksHubPage() {
               <p className="text-sm text-muted-foreground">No risks match these filters.</p>
             ) : (
               <>
-                <div className="w-full overflow-x-auto rounded-xl border border-border/60">
-                  <table className="w-full min-w-[32rem] text-left text-sm">
-                    <thead className="border-b border-border/60 bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2 font-medium">Title</th>
-                        <th className="px-3 py-2 font-medium">Severity</th>
-                        <th className="px-3 py-2 font-medium">Status</th>
-                        <th className="px-3 py-2 font-medium">Updated</th>
-                        <th className="px-3 py-2 font-medium" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {slice.map((r) => (
-                        <tr key={r.id} className="border-b border-border/40 last:border-0">
-                          <td className="px-3 py-2 font-medium text-foreground">{r.title}</td>
-                          <td className="px-3 py-2 capitalize text-muted-foreground">{r.severity}</td>
-                          <td className="px-3 py-2 capitalize text-muted-foreground">{r.status}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</td>
-                          <td className="px-3 py-2 text-right">
-                            <Button asChild variant="link" className="h-auto p-0 text-primary">
-                              <Link to={`/dashboard/projects/${selectedId}/risks`}>View in dashboard</Link>
-                            </Button>
-                          </td>
+                <div className="overflow-hidden rounded-xl border border-border/60">
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full min-w-[32rem] text-left text-sm">
+                      <thead className="border-b border-border/60 bg-muted/40 text-xs uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2 font-medium">Title</th>
+                          <th className="px-3 py-2 font-medium">Severity</th>
+                          <th className="px-3 py-2 font-medium">Status</th>
+                          <th className="px-3 py-2 font-medium">Updated</th>
+                          <th className="px-3 py-2 font-medium" />
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex w-full flex-col gap-2 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredRisks.length)} of{" "}
-                    {filteredRisks.length} (total {risks.length} on project)
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl"
-                      disabled={safePage <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <span className="self-center text-xs text-muted-foreground">
-                      Page {safePage} / {totalPages}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl"
-                      disabled={safePage >= totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      Next
-                    </Button>
+                      </thead>
+                      <tbody>
+                        {slice.map((r) => (
+                          <tr key={r.id} className="border-b border-border/40 last:border-0">
+                            <td className="px-3 py-2 font-medium text-foreground">{r.title}</td>
+                            <td className="px-3 py-2 capitalize text-muted-foreground">{r.severity}</td>
+                            <td className="px-3 py-2 capitalize text-muted-foreground">{r.status}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{new Date(r.updated_at).toLocaleString()}</td>
+                            <td className="px-3 py-2 text-right">
+                              <Button asChild variant="link" className="h-auto p-0 text-primary">
+                                <Link to={`/dashboard/projects/${selectedId}/risks`}>View in dashboard</Link>
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
+                  <Pagination
+                    page={(safePage - 1) * PAGE_SIZE}
+                    pageSize={PAGE_SIZE}
+                    total={filteredRisks.length}
+                    onPrev={() => setPage((p) => Math.max(1, p - 1))}
+                    onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  />
                 </div>
               </>
             )}

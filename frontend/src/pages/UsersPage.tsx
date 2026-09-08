@@ -11,6 +11,8 @@ import { FormField } from "../components/ui/FormField";
 import { PasswordInput } from "../components/ui/PasswordInput";
 import { Modal } from "../components/ui/Modal";
 import { Table, type Column } from "../components/ui/Table";
+import { FilterField, FiltersBar, SearchField } from "@/components/ui/FiltersBar";
+import { Pagination } from "@/components/ui/Pagination";
 import { useToast } from "../components/ToastProvider";
 import { friendlyErrorMessage } from "@/lib/friendlyMessages";
 
@@ -412,19 +414,10 @@ export default function UsersPage() {
       {loading ? <p className="pp-muted">Loading…</p> : null}
       {!loading && rows.length === 0 && !error ? <p className="pp-muted">No users.</p> : null}
       {!loading && rows.length > 0 ? (
-        <div style={{ marginBottom: "1rem" }} className="pp-form pp-form--grid">
-          <FormField label="Search" htmlFor="u-search">
-            <input
-              id="u-search"
-              className="pp-input"
-              placeholder="Name, email, or id"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoComplete="off"
-            />
-          </FormField>
-          <FormField label="Role" htmlFor="u-role-filter">
-            <select id="u-role-filter" className="pp-input" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <FiltersBar className="mb-4">
+          <SearchField label="Search" value={search} onChange={setSearch} placeholder="Name, email, or id" />
+          <FilterField label="Role" className="max-w-[220px] flex-none">
+            <select id="u-role-filter" className="pp-input h-9 rounded-xl" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
               <option value="">All roles</option>
               {(Object.keys(ROLE_LABELS) as UserRole[]).map((rk) => (
                 <option key={rk} value={rk}>
@@ -432,37 +425,24 @@ export default function UsersPage() {
                 </option>
               ))}
             </select>
-          </FormField>
-        </div>
+          </FilterField>
+        </FiltersBar>
       ) : null}
       {!loading && filteredRows.length === 0 && rows.length > 0 ? (
         <p className="pp-muted">No users match these filters.</p>
       ) : null}
       {!loading && pagedRows.length > 0 ? (
         <>
-          <Table columns={columns} rows={pagedRows} rowKey={(r) => r.id || r.email || JSON.stringify(r)} />
-          {filteredRows.length > PAGE_SZ ? (
-            <div className="pp-row-actions" style={{ marginTop: "1rem", flexWrap: "wrap" }}>
-              <Button type="button" variant="secondary" disabled={pageSafe === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
-                Previous
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={pageSafe >= totalPages - 1}
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              >
-                Next
-              </Button>
-              <span className="pp-muted" style={{ fontSize: "0.9rem" }}>
-                Page {pageSafe + 1} of {totalPages} ({filteredRows.length} users)
-              </span>
-            </div>
-          ) : (
-            <p className="pp-muted" style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
-              Showing {filteredRows.length} user{filteredRows.length === 1 ? "" : "s"}.
-            </p>
-          )}
+          <div className="overflow-hidden rounded-xl border border-border/60">
+            <Table columns={columns} rows={pagedRows} rowKey={(r) => r.id || r.email || JSON.stringify(r)} />
+            <Pagination
+              page={pageSafe * PAGE_SZ}
+              pageSize={PAGE_SZ}
+              total={filteredRows.length}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+            />
+          </div>
         </>
       ) : null}
 

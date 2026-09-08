@@ -7,6 +7,8 @@ import { Card } from "../components/ui/Card";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PageLoader } from "../components/PageLoader";
 import { useToast } from "../components/ToastProvider";
+import { FiltersBar, SearchField } from "@/components/ui/FiltersBar";
+import { Pagination } from "@/components/ui/Pagination";
 import { friendlyErrorMessage } from "@/lib/friendlyMessages";
 
 /** No collaborators stored yet (empty or owner-only). */
@@ -99,7 +101,7 @@ export default function ProjectsPage() {
   if (items === null) return <PageLoader />;
 
   return (
-    <div className="pp-grid pp-grid--1 mx-auto w-full max-w-[1600px]">
+    <div className="pp-grid pp-grid--1 w-full">
       <Card
         title="Projects"
         actions={
@@ -117,148 +119,117 @@ export default function ProjectsPage() {
           <p className="pp-muted">No projects yet. Create one to upload status, RAID, and weekly history files.</p>
         ) : (
           <>
-            <div className="pp-form" style={{ marginBottom: "1rem", maxWidth: "none" }}>
-              <label className="pp-muted" htmlFor="projects-filter">
-                Search by name
-              </label>
-              <input
-                id="projects-filter"
-                className="pp-input"
-                style={{ marginTop: "0.35rem", maxWidth: "none", width: "100%" }}
+            <FiltersBar className="mb-4">
+              <SearchField
+                label="Search by name"
                 value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
+                onChange={setFilterText}
                 placeholder="Type to filter the list"
-                autoComplete="off"
+                className="flex-[2] max-w-none"
               />
-            </div>
+            </FiltersBar>
             {filtered.length === 0 ? (
               <p className="pp-muted">No projects match this search.</p>
             ) : (
               <>
-                <div className="pp-table-wrap">
-                  <table className="pp-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Data</th>
-                        <th>Updated</th>
-                        <th />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageSlice.map((p) => {
-                  const assignTeam = needsTeamAssignment(p);
-                  const showDelete = canDeleteProject(user, p);
-                  return (
-                    <tr key={p.id}>
-                      <td>
-                        <Link to={`/dashboard/projects/${p.id}${assignTeam ? "#project-team" : ""}`}>{p.name}</Link>
-                      </td>
-                      <td>
-                        {p.is_archived ? (
-                          <span className="pp-pill pp-pill--muted">Inactive</span>
-                        ) : (
-                          <span
-                            className="pp-pill"
-                            style={{ background: "color-mix(in srgb, hsl(var(--primary)) 14%, transparent)" }}
-                          >
-                            Active
-                          </span>
-                        )}
-                      </td>
-                      <td className="pp-muted">
-                        {p.has_ingested_data ? (
-                          <span
-                            className="pp-pill"
-                            style={{ background: "color-mix(in srgb, hsl(var(--primary)) 18%, transparent)" }}
-                          >
-                            Ingested
-                          </span>
-                        ) : (
-                          <span className="pp-pill pp-pill--muted">No uploads</span>
-                        )}
-                      </td>
-                      <td className="pp-muted">{new Date(p.updated_at).toLocaleString()}</td>
-                      <td style={{ textAlign: "right" }}>
-                        <span className="pp-row-actions" style={{ justifyContent: "flex-end" }}>
-                          <Link
-                            className="pp-btn pp-btn--secondary pp-btn--sm"
-                            to={`/dashboard/projects/${p.id}${assignTeam ? "#project-team" : ""}`}
-                          >
-                            {assignTeam ? "Assign team" : "Edit"}
-                          </Link>
-                          <Link className="pp-btn pp-btn--primary pp-btn--sm" to={`/dashboard/projects/${p.id}/health`}>
-                            Health
-                          </Link>
-                          {p.has_ingested_data || p.latest_report_job_id ? (
+                <div className="overflow-hidden rounded-xl border border-border/60">
+                  <div className="pp-table-wrap">
+                    <table className="pp-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Status</th>
+                          <th>Data</th>
+                          <th>Updated</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pageSlice.map((p) => {
+                    const assignTeam = needsTeamAssignment(p);
+                    const showDelete = canDeleteProject(user, p);
+                    return (
+                      <tr key={p.id}>
+                        <td>
+                          <Link to={`/dashboard/projects/${p.id}${assignTeam ? "#project-team" : ""}`}>{p.name}</Link>
+                        </td>
+                        <td>
+                          {p.is_archived ? (
+                            <span className="pp-pill pp-pill--muted">Inactive</span>
+                          ) : (
+                            <span
+                              className="pp-pill"
+                              style={{ background: "color-mix(in srgb, hsl(var(--primary)) 14%, transparent)" }}
+                            >
+                              Active
+                            </span>
+                          )}
+                        </td>
+                        <td className="pp-muted">
+                          {p.has_ingested_data ? (
+                            <span
+                              className="pp-pill"
+                              style={{ background: "color-mix(in srgb, hsl(var(--primary)) 18%, transparent)" }}
+                            >
+                              Ingested
+                            </span>
+                          ) : (
+                            <span className="pp-pill pp-pill--muted">No uploads</span>
+                          )}
+                        </td>
+                        <td className="pp-muted">{new Date(p.updated_at).toLocaleString()}</td>
+                        <td style={{ textAlign: "right" }}>
+                          <span className="pp-row-actions" style={{ justifyContent: "flex-end" }}>
                             <Link
-                              className="pp-btn pp-btn--primary pp-btn--sm"
-                              to={
-                                p.latest_report_job_id
-                                  ? `/dashboard/projects/${p.id}/reports?jobId=${encodeURIComponent(p.latest_report_job_id)}`
-                                  : `/dashboard/projects/${p.id}/reports`
-                              }
+                              className="pp-btn pp-btn--secondary pp-btn--sm"
+                              to={`/dashboard/projects/${p.id}${assignTeam ? "#project-team" : ""}`}
                             >
-                              View report
+                              {assignTeam ? "Assign team" : "Edit"}
                             </Link>
-                          ) : null}
-                          <Link className="pp-btn pp-btn--secondary pp-btn--sm" to={`/dashboard/projects/${p.id}/upload`}>
-                            Upload
-                          </Link>
-                          {showDelete ? (
-                            <Button
-                              type="button"
-                              variant="danger"
-                              className="pp-btn--sm"
-                              disabled={deletingId === p.id}
-                              onClick={() => setConfirmDelete(p)}
-                            >
-                              {deletingId === p.id ? "Removing…" : "Delete"}
-                            </Button>
-                          ) : null}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div
-                  className="pp-row-actions"
-                  style={{
-                    marginTop: "1rem",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <p className="pp-muted" style={{ margin: 0, fontSize: "0.875rem" }}>
-                    Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} of {filtered.length}
-                    {filterText.trim() ? ` (of ${items.length} total)` : ""}
-                  </p>
-                  <span className="pp-row-actions">
-                    <button
-                      type="button"
-                      className="pp-btn pp-btn--secondary pp-btn--sm"
-                      disabled={safePage <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                      Previous
-                    </button>
-                    <span className="pp-muted" style={{ fontSize: "0.85rem", alignSelf: "center" }}>
-                      Page {safePage} / {totalPages}
-                    </span>
-                    <button
-                      type="button"
-                      className="pp-btn pp-btn--secondary pp-btn--sm"
-                      disabled={safePage >= totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      Next
-                    </button>
-                  </span>
+                            <Link className="pp-btn pp-btn--primary pp-btn--sm" to={`/dashboard/projects/${p.id}/health`}>
+                              Health
+                            </Link>
+                            {p.has_ingested_data || p.latest_report_job_id ? (
+                              <Link
+                                className="pp-btn pp-btn--primary pp-btn--sm"
+                                to={
+                                  p.latest_report_job_id
+                                    ? `/dashboard/projects/${p.id}/reports?jobId=${encodeURIComponent(p.latest_report_job_id)}`
+                                    : `/dashboard/projects/${p.id}/reports`
+                                }
+                              >
+                                View report
+                              </Link>
+                            ) : null}
+                            <Link className="pp-btn pp-btn--secondary pp-btn--sm" to={`/dashboard/projects/${p.id}/upload`}>
+                              Upload
+                            </Link>
+                            {showDelete ? (
+                              <Button
+                                type="button"
+                                variant="danger"
+                                className="pp-btn--sm"
+                                disabled={deletingId === p.id}
+                                onClick={() => setConfirmDelete(p)}
+                              >
+                                {deletingId === p.id ? "Removing…" : "Delete"}
+                              </Button>
+                            ) : null}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination
+                    page={(safePage - 1) * pageSize}
+                    pageSize={pageSize}
+                    total={filtered.length}
+                    onPrev={() => setPage((p) => Math.max(1, p - 1))}
+                    onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  />
                 </div>
               </>
             )}

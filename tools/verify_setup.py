@@ -22,7 +22,6 @@ def main() -> int:
         "requirements.txt",
         "backend/app/main.py",
         "frontend/package.json",
-        "run.bat",
         ".env.example",
         "frontend/.env.example",
     ]

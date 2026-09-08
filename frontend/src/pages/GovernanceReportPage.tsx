@@ -90,7 +90,7 @@ export default function GovernanceReportPage() {
 
   if (!projectId) {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-6">
+      <div className="w-full space-y-6">
         <Card title="Governance report">
           <p className="pp-muted">
             Pick a project on the Reports page first. That keeps every run tied to a workspace you recognise in
@@ -107,9 +107,9 @@ export default function GovernanceReportPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <Card title="Governance report">
-        <div className="pp-muted mx-auto max-w-2xl text-center text-sm" style={{ marginBottom: "1.25rem" }}>
+        <div className="pp-muted w-full text-center text-sm" style={{ marginBottom: "1.25rem" }}>
           {projectErr ? <p className="pp-field__error">{projectErr}</p> : null}
           {project ? (
             <p>
@@ -126,7 +126,7 @@ export default function GovernanceReportPage() {
           </p>
         </div>
 
-        <p className="pp-muted mx-auto max-w-2xl text-center">
+        <p className="pp-muted w-full text-center">
           Status tracker and RAID log must be Excel files with the expected columns. Weekly history is a CSV with{" "}
           <code>Week</code> and <code>Completion</code>.
         </p>

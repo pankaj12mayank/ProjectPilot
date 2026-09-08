@@ -4,6 +4,10 @@ import { apiFetch, readJsonOk } from "@/api/client";
 import { fetchAuditLogsPaged, type AuditLogRow } from "@/api/logs";
 import { Button } from "@/components/shadcn/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/card";
+import { FilterField, FiltersBar, SearchField } from "@/components/ui/FiltersBar";
+import { Pagination } from "@/components/ui/Pagination";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/components/ToastProvider";
 
 const PAGE = 25;
 
@@ -35,6 +39,10 @@ export default function AdminAuditPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [users, setUsers] = useState<UserOpt[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const t = window.setTimeout(() => setQDebounced(q.trim()), 300);
@@ -99,14 +107,48 @@ export default function AdminAuditPage() {
     void load();
   }, [load]);
 
-  const pageCount = Math.max(1, Math.ceil(total / PAGE));
-  const pageIndex = Math.floor(offset / PAGE) + 1;
+  useEffect(() => {
+    setSelected(new Set());
+  }, [rows]);
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+  function toggleAll() {
+    if (selected.size === rows.length && rows.length > 0) setSelected(new Set());
+    else setSelected(new Set(rows.map((r) => r.id)));
+  }
+  async function handleHardDelete() {
+    if (selected.size === 0) return;
+    setDeleting(true);
+    try {
+      const res = await apiFetch("/logs/audit/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error((await res.text()).slice(0, 300) || "Delete failed");
+      const data = (await res.json().catch(() => ({}))) as { deleted?: number };
+      toast.push("success", `${data.deleted ?? selected.size} audit logs hard deleted.`);
+      setSelected(new Set());
+      setConfirmOpen(false);
+      void load();
+    } catch (e) {
+      toast.push("error", e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">Audit log</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-1 w-full text-sm text-muted-foreground">
           Immutable security trail. Filter by actor, entity, or free text. For the combined log viewer see{" "}
           <Link to="/dashboard/logs?tab=audit" className="font-medium text-primary hover:underline">
             Activity &amp; logs
@@ -115,91 +157,48 @@ export default function AdminAuditPage() {
         </p>
       </div>
 
-      <Card className="border-border/80 shadow-card">
-        <CardHeader>
-          <CardTitle className="text-base">Filters</CardTitle>
-          <CardDescription>Search runs server-side.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-q">
-              Search
-            </label>
-            <input id="ad-q" className={inputClass} placeholder="Action, entity, detail…" value={q} onChange={(e) => setQ(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-action">
-              Action contains
-            </label>
-            <input id="ad-action" className={inputClass} value={action} onChange={(e) => setAction(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-etype">
-              Entity type
-            </label>
-            <input id="ad-etype" className={inputClass} placeholder="e.g. branding" value={entityType} onChange={(e) => setEntityType(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-eid">
-              Entity id
-            </label>
-            <input id="ad-eid" className={inputClass} value={entityId} onChange={(e) => setEntityId(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Actor</label>
-            <select className={inputClass} value={actorUserId} onChange={(e) => setActorUserId(e.target.value)} aria-label="Actor user">
-              <option value="">Any</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.full_name} ({u.email})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-1">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-df">
-                From
-              </label>
-              <input id="ad-df" type="date" className={inputClass} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground" htmlFor="ad-dt">
-                To
-              </label>
-              <input id="ad-dt" type="date" className={inputClass} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <FiltersBar>
+        <SearchField label="Search" value={q} onChange={setQ} placeholder="Action, entity, detail…" />
+        <FilterField label="Action contains">
+          <input id="ad-action" className={inputClass} value={action} onChange={(e) => setAction(e.target.value)} placeholder="e.g. login" />
+        </FilterField>
+        <FilterField label="Entity type">
+          <input id="ad-etype" className={inputClass} placeholder="e.g. branding" value={entityType} onChange={(e) => setEntityType(e.target.value)} />
+        </FilterField>
+        <FilterField label="Entity id">
+          <input id="ad-eid" className={inputClass} value={entityId} onChange={(e) => setEntityId(e.target.value)} placeholder="UUID" />
+        </FilterField>
+        <FilterField label="Actor">
+          <select className={inputClass} value={actorUserId} onChange={(e) => setActorUserId(e.target.value)} aria-label="Actor user">
+            <option value="">Any</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.full_name} ({u.email})
+              </option>
+            ))}
+          </select>
+        </FilterField>
+        <FilterField label="From" className="min-w-[148px] flex-none">
+          <input id="ad-df" type="date" className={inputClass} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+        </FilterField>
+        <FilterField label="To" className="min-w-[148px] flex-none">
+          <input id="ad-dt" type="date" className={inputClass} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+        </FilterField>
+      </FiltersBar>
 
-      <Card className="border-border/80 shadow-card">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+      <Card className="overflow-hidden border-border/80 shadow-card">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <div>
             <CardTitle className="text-base">Events</CardTitle>
-            <CardDescription>
-              {total === 0 ? "No rows" : `${offset + 1}–${offset + rows.length} of ${total}`}
-            </CardDescription>
+            <CardDescription>Search runs server-side. {selected.size > 0 ? `${selected.size} selected` : ""}</CardDescription>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" className="rounded-xl" disabled={offset === 0 || loading} onClick={() => setOffset((o) => Math.max(0, o - PAGE))}>
-              Previous
+          {selected.size > 0 ? (
+            <Button type="button" variant="destructive" size="sm" className="rounded-xl" onClick={() => setConfirmOpen(true)}>
+              Hard delete ({selected.size})
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="rounded-xl"
-              disabled={offset + PAGE >= total || loading}
-              onClick={() => setOffset((o) => o + PAGE)}
-            >
-              Next
-            </Button>
-            <span className="self-center text-xs text-muted-foreground">
-              Page {pageIndex} / {pageCount}
-            </span>
-          </div>
+          ) : null}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {loading ? <p className="text-sm text-muted-foreground">Loading…</p> : null}
           {!loading && rows.length === 0 && !error ? <p className="text-sm text-muted-foreground">No audit rows match.</p> : null}
@@ -208,6 +207,9 @@ export default function AdminAuditPage() {
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead className="border-b border-border/60 bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
+                    <th className="w-9 px-3 py-2.5">
+                      <input type="checkbox" className="size-4 rounded border-input accent-primary" checked={rows.length > 0 && selected.size === rows.length} onChange={toggleAll} aria-label="Select all" />
+                    </th>
                     <th className="px-3 py-2.5 font-medium">When</th>
                     <th className="px-3 py-2.5 font-medium">Action</th>
                     <th className="px-3 py-2.5 font-medium">Entity</th>
@@ -217,6 +219,9 @@ export default function AdminAuditPage() {
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id} className="border-b border-border/40 last:border-0 hover:bg-muted/15">
+                      <td className="px-3 py-2">
+                        <input type="checkbox" className="size-4 rounded border-input accent-primary" checked={selected.has(r.id)} onChange={() => toggleOne(r.id)} aria-label={`Select ${r.id}`} />
+                      </td>
                       <td className="whitespace-nowrap px-3 py-2 text-xs text-muted-foreground">{fmtIso(r.created_at)}</td>
                       <td className="px-3 py-2 font-mono text-xs">{r.action}</td>
                       <td className="px-3 py-2 text-xs">
@@ -231,7 +236,26 @@ export default function AdminAuditPage() {
             </div>
           ) : null}
         </CardContent>
+        <Pagination
+          page={offset}
+          pageSize={PAGE}
+          total={total}
+          onPrev={() => setOffset((o) => Math.max(0, o - PAGE))}
+          onNext={() => setOffset((o) => o + PAGE)}
+          className="rounded-b-xl"
+        />
       </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Hard delete audit logs?"
+        message={`Permanently delete ${selected.size} audit log(s)? This cannot be undone.`}
+        confirmLabel="Hard delete"
+        variant="danger"
+        loading={deleting}
+        onConfirm={() => void handleHardDelete()}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

@@ -46,6 +46,7 @@ const AdminPlansPage = lazy(() => import("./pages/AdminPlansPage"));
 const AdminGatewaysPage = lazy(() => import("./pages/AdminGatewaysPage"));
 const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
 const AdminSubscriptionsPage = lazy(() => import("./pages/AdminSubscriptionsPage"));
+const AdminAIPage = lazy(() => import("./pages/AdminAIPage"));
 
 const HomePage = lazy(() => import("./landing/pages/HomePage"));
 const FeaturesPage = lazy(() => import("./landing/pages/FeaturesPage"));
@@ -374,6 +375,14 @@ export default function App() {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <AdminSubscriptionsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="admin/ai"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <AdminAIPage />
                 </Suspense>
               }
             />
