@@ -7,7 +7,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-import razorpay
+try:
+    import razorpay
+    _RAZORPAY_AVAILABLE = True
+except ImportError:  # pragma: no cover - allows app to start without optional dep
+    razorpay = None  # type: ignore[assignment]
+    _RAZORPAY_AVAILABLE = False
 
 from app.db.models import Plan, Subscription, User
 from app.services.payment import BasePaymentGateway, PaymentGatewayError
@@ -19,6 +24,11 @@ class RazorpayGateway(BasePaymentGateway):
     code = "razorpay"
 
     def __init__(self, api_key: str, secret_key: str, webhook_secret: str) -> None:
+        if not _RAZORPAY_AVAILABLE or razorpay is None:
+            raise PaymentGatewayError(
+                "Razorpay SDK not installed. Install it with: pip install razorpay>=1.4.0 "
+                "and restart the API (or add it to requirements.txt)."
+            )
         self.api_key = api_key
         self.secret_key = secret_key
         self.webhook_secret = webhook_secret
@@ -76,7 +86,15 @@ class RazorpayGateway(BasePaymentGateway):
             })
             short_url = sub.get("short_url", "")
             return {"url": short_url, "session_id": sub["id"]}
-        except razorpay.errors.BadRequestError as e:
+        except Exception as e:  # handles BadRequestError + generic SDK errors
+            if _RAZORPAY_AVAILABLE and razorpay is not None:
+                try:
+                    if isinstance(e, razorpay.errors.BadRequestError):  # type: ignore[attr-defined]
+                        raise PaymentGatewayError(f"Razorpay subscription error: {e}") from e
+                except PaymentGatewayError:
+                    raise
+                except Exception:
+                    pass
             raise PaymentGatewayError(f"Razorpay subscription error: {e}") from e
 
     def create_customer_portal_link(
@@ -92,7 +110,15 @@ class RazorpayGateway(BasePaymentGateway):
             sub = self.client.subscription.cancel(gateway_subscription_id)
             status = sub.get("status", "cancelled")
             return {"status": status, "cancel_at_period_end": True, "current_period_end": int(datetime.now(timezone.utc).timestamp())}
-        except razorpay.errors.BadRequestError as e:
+        except Exception as e:
+            if _RAZORPAY_AVAILABLE and razorpay is not None:
+                try:
+                    if isinstance(e, razorpay.errors.BadRequestError):  # type: ignore[attr-defined]
+                        raise PaymentGatewayError(f"Razorpay cancel error: {e}") from e
+                except PaymentGatewayError:
+                    raise
+                except Exception:
+                    pass
             raise PaymentGatewayError(f"Razorpay cancel error: {e}") from e
 
     def update_subscription_plan(
@@ -107,7 +133,15 @@ class RazorpayGateway(BasePaymentGateway):
                 "notes": {"plan_slug": new_plan.slug, "plan_id": new_plan.id},
             })
             return {"status": sub.get("status", "active"), "current_period_end": sub.get("current_end") or 0}
-        except razorpay.errors.BadRequestError as e:
+        except Exception as e:
+            if _RAZORPAY_AVAILABLE and razorpay is not None:
+                try:
+                    if isinstance(e, razorpay.errors.BadRequestError):  # type: ignore[attr-defined]
+                        raise PaymentGatewayError(f"Razorpay update error: {e}") from e
+                except PaymentGatewayError:
+                    raise
+                except Exception:
+                    pass
             raise PaymentGatewayError(f"Razorpay update error: {e}") from e
 
     def process_webhook(self, payload: bytes, signature: str | None) -> dict[str, Any]:
@@ -138,5 +172,13 @@ class RazorpayGateway(BasePaymentGateway):
                 "current_period_end": sub.get("current_end") or 0,
                 "cancel_at_period_end": sub.get("ended_at") is not None,
             }
-        except razorpay.errors.BadRequestError as e:
+        except Exception as e:
+            if _RAZORPAY_AVAILABLE and razorpay is not None:
+                try:
+                    if isinstance(e, razorpay.errors.BadRequestError):  # type: ignore[attr-defined]
+                        raise PaymentGatewayError(f"Razorpay retrieve error: {e}") from e
+                except PaymentGatewayError:
+                    raise
+                except Exception:
+                    pass
             raise PaymentGatewayError(f"Razorpay retrieve error: {e}") from e

@@ -8,8 +8,10 @@ from sqlalchemy.orm import Session
 from app.db.models import PaymentGateway
 from app.services.gateway_service import get_gateway_by_code
 from app.services.payment import BasePaymentGateway, PaymentGatewayError
-from app.services.payment.razorpay_gateway import RazorpayGateway
-from app.services.payment.stripe_gateway import StripeGateway
+
+# NOTE: Gateway implementations are imported lazily inside _build_gateway
+# to avoid crashing the entire API at startup when optional SDKs
+# (stripe, razorpay) are not installed. See production fix below.
 
 
 def resolve_gateway(db: Session, gateway_code: str) -> BasePaymentGateway:
@@ -36,6 +38,12 @@ def _build_gateway(gw: PaymentGateway) -> BasePaymentGateway:
     if gw.code == "stripe":
         if not gw.secret_key:
             raise PaymentGatewayError("Stripe secret key not configured")
+        try:
+            from app.services.payment.stripe_gateway import StripeGateway
+        except ImportError as e:  # pragma: no cover
+            raise PaymentGatewayError(
+                "Stripe SDK not installed. Run: pip install stripe>=7.0.0 and restart the API."
+            ) from e
         return StripeGateway(
             api_key=gw.secret_key,
             webhook_secret=gw.webhook_secret or "",
@@ -43,6 +51,12 @@ def _build_gateway(gw: PaymentGateway) -> BasePaymentGateway:
     elif gw.code == "razorpay":
         if not gw.api_key or not gw.secret_key:
             raise PaymentGatewayError("Razorpay API key or secret key not configured")
+        try:
+            from app.services.payment.razorpay_gateway import RazorpayGateway
+        except ImportError as e:  # pragma: no cover
+            raise PaymentGatewayError(
+                "Razorpay SDK not installed. Run: pip install razorpay>=1.4.0 and restart the API."
+            ) from e
         return RazorpayGateway(
             api_key=gw.api_key,
             secret_key=gw.secret_key,

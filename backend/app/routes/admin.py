@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.config.settings import get_settings
@@ -424,7 +425,7 @@ def admin_delete_plan(
     plan_id: str,
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
-) -> None:
+) -> Response:
     from app.services.plan_service import delete_plan, get_plan
 
     plan = get_plan(db, plan_id)
@@ -436,6 +437,7 @@ def admin_delete_plan(
         entity_id=plan_id, detail={"name": plan.name},
         ip_address=_client_ip(request),
     )
+    return Response(status_code=204)
 
 
 @router.put("/plans/{plan_id}/features", response_model=list[PlanFeatureOut])
